@@ -1,0 +1,21 @@
+{
+	"name": "FORWARD_HUB",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"dev:h5": "uni --mode development --platform h5",
+		"dev:mp-weixin": "uni --mode development --platform mp-weixin",
+		"test:h5": "uni --mode test --platform h5",
+		"build:h5": "uni build --mode production --platform h5",
+		"build:mp-weixin": "uni build --mode production --platform mp-weixin"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"vue-i18n": "^11.4.2"
+	},
+	"devDependencies": {
+		"@vue/tsconfig": "^0.9.1"
+	}
+}

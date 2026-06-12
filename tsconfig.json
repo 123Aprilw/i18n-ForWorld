@@ -8,7 +8,12 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-		"types": ["vite/client", "@dcloudio/types"]
+		"types": [
+			"@dcloudio/types",
+			"@dcloudio/uni-app",
+			"vite/client"
+		],
+		"typeRoots": ["./node_modules/@types", "./node_modules/@dcloudio/types"]
 	},
 	"include": ["src/**/*", "env.d.ts"]
 }

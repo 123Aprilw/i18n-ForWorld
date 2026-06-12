@@ -16,7 +16,7 @@ Vue.use(VueI18n)
 Vue.config.productionTip = false
 
 const i18n = new VueI18n({
-	locale: uni.getStorageSync('lang') || 'ja',
+	locale: uni.getStorageSync('lang') || 'jp',
 	fallbackLocale: 'en',
 	messages
 })
@@ -40,7 +40,7 @@ import {
 
 const i18n = createI18n({
 	legacy: false,
-	locale: uni.getStorageSync('lang') || 'ja',
+	locale: uni.getStorageSync('lang') || 'jp',
 	fallbackLocale: 'en',
 	messages
 })

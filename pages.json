@@ -1,19 +1,121 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	"pages": [
 		{
-			"path": "pages/index/index"
+			"path": "pages/login/login",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Login"
+			}
+		},
+		{
+			"path": "pages/home/home",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Home"
+			}
+		},
+		{
+			"path": "pages/order/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Orders"
+			}
+		},
+		{
+			"path": "pages/message/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Messages"
+			}
+		},
+		{
+			"path": "pages/profile/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Profile"
+			}
+		},
+		{
+			"path": "pages/register/register",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Register"
+			}
+		},
+		{
+			"path": "pages/reset-password/reset-password",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Reset Password"
+			}
+		},
+		{
+			"path": "pages/user-agreement/user-agreement",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Terms"
+			}
+		},
+		{
+			"path": "pages/venue/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Venue"
+			}
+		},
+		{
+			"path": "pages/seat/date",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Select Date"
+			}
+		},
+		{
+			"path": "pages/seat/time",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Select Time"
+			}
+		},
+		{
+			"path": "pages/seat/booking",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Seat Booking"
+			}
+		},
+		{
+			"path": "pages/order/unpaid-block",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Booking Blocked"
+			}
+		},
+		{
+			"path": "pages/order/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Order Detail"
+			}
+		},
+		{
+			"path": "pages/profile/edit",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "Edit Profile"
+			}
 		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"navigationBarTitleText": "FORWARD_HUB",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#FFFFFF"
 	},
 	"easycom": {
 		"autoscan": true,
 		"custom": {
-			"^uv-(.*)": "@/uni_modules/uv-ui/components/$1/$1"
+			"^uv-(.*)": "@/uni_modules/uv-$1/components/uv-$1/uv-$1.vue"
 		}
 	},
 	"uniIdRouter": {}

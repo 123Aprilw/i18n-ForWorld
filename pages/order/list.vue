@@ -36,7 +36,7 @@
 					<view class="order-card__top">
 						<view class="order-card__venue">
 							<view class="order-card__venue-icon">
-								<image class="order-card__pin" :src="icons.locationPin" mode="aspectFit" />
+								<image class="order-card__pin" :src="getImageUrl(icons.locationPin)" mode="aspectFit" />
 							</view>
 							<text class="order-card__venue-name">{{ t(order.venueKey) }}</text>
 						</view>
@@ -46,11 +46,11 @@
 					</view>
 					<view class="order-card__meta">
 						<view class="order-card__row">
-							<image class="order-card__meta-icon" :src="icons.yuyue" mode="aspectFit" />
+							<image class="order-card__meta-icon" :src="getImageUrl(icons.yuyue)" mode="aspectFit" />
 							<text>{{ t(order.dateKey) }}</text>
 						</view>
 						<view class="order-card__row">
-							<image class="order-card__meta-icon" :src="icons.time" mode="aspectFit" />
+							<image class="order-card__meta-icon" :src="getImageUrl(icons.time)" mode="aspectFit" />
 							<text>{{ order.time }}</text>
 						</view>
 					</view>
@@ -69,23 +69,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useLocale } from '@/composables/useLocale'
+import { useReservationOrder } from '@/composables/useReservationOrder'
 import { orders, type Order } from '@/utils/mock'
 import { icons } from '@/utils/icons'
+import { getImageUrl } from '@/src/config/env'
 import BrandLogo from '@/components/BrandLogo.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
 import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 
 const { t } = useLocale()
+const { orders: apiOrders, fetchOrders, loading } = useReservationOrder()
+
 const activeTab = ref('reserved')
+
+// 状态映射：页面状态 -> API状态
+const statusMap: Record<string, string> = {
+	'reserved': '1',      // 已预约
+	'arrived': '2',       // 已到场
+	'pending': '3',       // 待支付
+	'paid': '4',          // 已完成
+	'cancelled': '5'     // 已取消
+}
 
 onShow(() => {
 	const pages = getCurrentPages()
 	const page = pages[pages.length - 1] as any
 	if (page?.options?.tab) activeTab.value = page.options.tab
+})
+
+// 监听tab变化，获取对应状态的订单
+watch(activeTab, (newTab) => {
+	fetchOrders(statusMap[newTab], 1, true)
+})
+
+onMounted(() => {
+	// 初始加载订单
+	fetchOrders(statusMap[activeTab.value], 1, true)
 })
 
 const tabs = [
@@ -96,7 +119,26 @@ const tabs = [
 	{ key: 'cancelled', labelKey: 'order.cancelled' }
 ]
 
-const filteredOrders = computed(() => orders.filter(o => o.status === activeTab.value))
+// 使用API数据，如果为空则使用mock数据
+const displayOrders = computed(() => {
+	if (apiOrders.value && apiOrders.value.length > 0) {
+		// 将API数据转换为页面需要的格式
+		return apiOrders.value.map(order => ({
+			id: order.id.toString(),
+			venueKey: 'venue.name', // 需要根据实际语言key调整
+			status: Object.keys(statusMap).find(key => statusMap[key] === order.status.toString()) || 'reserved',
+			dateKey: 'order.date',
+			date: order.reserve_date,
+			time: `${order.start_time} - ${order.end_time}`,
+			seat: `${order.actual_minutes}min`,
+			price: `¥${order.amount}`
+		}))
+	}
+	// 回退到mock数据
+	return orders.filter(o => o.status === activeTab.value)
+})
+
+const filteredOrders = computed(() => displayOrders.value)
 
 const goDetail = (order: Order) => {
 	const typeMap: Record<string, string> = {

@@ -5,11 +5,11 @@
 			<view class="venue-gallery-wrap">
 				<swiper class="venue-gallery" :current="galleryIndex" circular :autoplay="galleryAutoplay"
 					:interval="4000" :duration="400" @change="onGalleryChange">
-					<swiper-item v-for="(img, index) in venue.gallery" :key="index">
+					<swiper-item v-for="(img, index) in (venue.value ? (venue.value.images.length > 0 ? venue.value.images : [venue.value.cover_image]) : displayVenue.gallery)" :key="index">
 						<view class="venue-gallery__slide" @click="previewGallery(index)">
-							<image class="venue-gallery__image" :src="img" mode="aspectFill" />
+							<image class="venue-gallery__image" :src="getImageUrl(img)" mode="aspectFill" />
 							<view class="venue-gallery__gradient" />
-							<view v-if="venue.hasVideo && index === 0" class="venue-gallery__video"
+							<view v-if="!venue.value && displayVenue.hasVideo && index === 0" class="venue-gallery__video"
 								@click.stop="playVideo">
 								<view class="venue-gallery__play">
 									<view class="venue-gallery__play-icon" />
@@ -20,7 +20,7 @@
 					</swiper-item>
 				</swiper>
 				<view class="venue-gallery__dots">
-					<view v-for="(_, index) in venue.gallery" :key="index" class="venue-gallery__dot"
+					<view v-for="(_, index) in (venue.value ? (venue.value.images.length > 0 ? venue.value.images : [venue.value.cover_image]) : displayVenue.gallery)" :key="index" class="venue-gallery__dot"
 						:class="{ 'venue-gallery__dot--active': galleryIndex === index }"
 						@click="setGalleryIndex(index)" />
 				</view>
@@ -28,30 +28,30 @@
 
 			<view class="venue-content">
 				<view class="venue-title-block">
-					<text class="venue-title">{{ t(venue.nameKey) }}</text>
+					<text class="venue-title">{{ venue.value ? venue.value.name : t(displayVenue.nameKey) }}</text>
 					<view class="venue-location" @click="openMap">
 						<image class="venue-location__pin" src="/static/images/venues/location-pin.png"
 							mode="aspectFit" />
-						<text class="venue-location__text">{{ t(venue.locationKey) }}</text>
+						<text class="venue-location__text">{{ venue.value ? venue.value.address : t(displayVenue.locationKey) }}</text>
 					</view>
 				</view>
 
 				<view class="venue-section">
-					<text class="venue-section__heading">{{ t(venue.experienceTitleKey) }}</text>
-					<text class="venue-section__body">{{ t(venue.experienceDescKey) }}</text>
+					<text class="venue-section__heading">{{ t('venue.experienceTitle') }}</text>
+					<text class="venue-section__body">{{ venue.value ? venue.value.description : t(displayVenue.experienceDescKey) }}</text>
 				</view>
 
 				<view class="venue-section">
 					<text
 						class="venue-section__heading venue-section__heading--light">{{ t('venue.servicesTitle') }}</text>
 					<view class="amenity-grid">
-						<view v-for="item in venue.amenities" :key="item.labelKey" class="amenity-card"
-							:class="{ 'amenity-card--active': activeAmenity === item.labelKey }"
-							@click="toggleAmenity(item.labelKey)">
+						<view v-for="(item, index) in (venue.value ? venue.value.facilities : displayVenue.amenities)" :key="index" class="amenity-card"
+							:class="{ 'amenity-card--active': activeAmenity === (venue.value ? item.name : item.labelKey) }"
+							@click="toggleAmenity(venue.value ? item.name : item.labelKey)">
 							<view class="amenity-card__icon-wrap">
-								<image class="amenity-card__icon" :src="item.icon" mode="aspectFit" />
+								<image class="amenity-card__icon" :src="getImageUrl(venue.value ? item.icon : item.icon)" mode="aspectFit" />
 							</view>
-							<text class="amenity-card__label">{{ t(item.labelKey) }}</text>
+							<text class="amenity-card__label">{{ venue.value ? item.name : t(item.labelKey) }}</text>
 						</view>
 					</view>
 				</view>
@@ -59,13 +59,13 @@
 				<view class="venue-section">
 					<text class="venue-section__heading">{{ t('venue.spaceFeaturesTitle') }}</text>
 					<view class="bento-list">
-						<view v-for="card in venue.bentoCards" :id="`bento-${card.spaceType}`" :key="card.spaceType"
-							class="bento-card" :class="{ 'bento-card--selected': selectedSpace === card.spaceType }"
-							@click="selectSpace(card.spaceType)">
-							<image class="bento-card__image" :src="card.image" mode="widthFix" />
+						<view v-for="(card, index) in (venue.value ? venue.value.features : displayVenue.bentoCards)" :id="`bento-${index}`" :key="index"
+							class="bento-card" :class="{ 'bento-card--selected': selectedSpace === index.toString() }"
+							@click="selectSpace(index.toString())">
+							<image class="bento-card__image" :src="getImageUrl(venue.value ? card.image : card.image)" mode="widthFix" />
 							<view class="bento-card__body">
-								<text class="bento-card__title">{{ t(card.titleKey) }}</text>
-								<text class="bento-card__desc">{{ t(card.descKey) }}</text>
+								<text class="bento-card__title">{{ venue.value ? card.title : t(card.titleKey) }}</text>
+								<text class="bento-card__desc">{{ venue.value ? card.description : t(card.descKey) }}</text>
 							</view>
 						</view>
 					</view>
@@ -78,7 +78,7 @@
 							<image class="info-card__icon" :src="icons.clock" mode="aspectFit" />
 							<view class="info-card__section-content">
 								<text class="info-card__section-title">{{ t('venue.businessHoursLabel') }}</text>
-								<text class="info-card__section-text">{{ t('venue.businessHoursDaily') }}</text>
+								<text class="info-card__section-text">{{ venue.value ? `${venue.value.open_time} - ${venue.value.close_time}` : t('venue.businessHoursDaily') }}</text>
 							</view>
 						</view>
 						<view class="info-card__section">
@@ -86,9 +86,12 @@
 							<view class="info-card__section-content">
 								<text class="info-card__section-title">{{ t('venue.houseRulesLabel') }}</text>
 								<view class="info-card__rules">
-									<text class="info-card__rule">{{ t('venue.houseRule1') }}</text>
-									<text class="info-card__rule">{{ t('venue.houseRule2') }}</text>
-									<text class="info-card__rule">{{ t('venue.houseRule3') }}</text>
+									<text v-if="venue.value" class="info-card__rule">{{ venue.value.house_rules }}</text>
+									<template v-else>
+										<text class="info-card__rule">{{ t('venue.houseRule1') }}</text>
+										<text class="info-card__rule">{{ t('venue.houseRule2') }}</text>
+										<text class="info-card__rule">{{ t('venue.houseRule3') }}</text>
+									</template>
 								</view>
 							</view>
 						</view>
@@ -103,16 +106,20 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed } from 'vue'
+	import { ref, computed, onMounted } from 'vue'
 	import { onLoad, onShow, onHide } from '@dcloudio/uni-app'
 	import { useLocale } from '@/composables/useLocale'
+	import { useVenueDetail } from '@/composables/useVenueDetail'
 	import { venues } from '@/utils/mock'
 	import { icons } from '@/utils/icons'
+	import { getImageUrl } from '@/src/config/env'
 	import PageHeader from '@/components/PageHeader.vue'
 	import BottomActionBar from '@/components/BottomActionBar.vue'
 	import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 
 	const { t } = useLocale()
+	const { venue, loading, fetchVenueDetail } = useVenueDetail()
+	
 	const venueId = ref('1')
 	const galleryIndex = ref(0)
 	const galleryAutoplay = ref(true)
@@ -125,6 +132,18 @@
 		if (query?.space) selectedSpace.value = query.space as string
 	})
 
+	onMounted(async () => {
+		if (venueId.value) {
+			try {
+				await fetchVenueDetail(venueId.value)
+			} catch (error) {
+				console.error('获取场馆详情失败:', error)
+				// 如果API调用失败，回退到mock数据
+				console.log('使用mock数据')
+			}
+		}
+	})
+
 	onShow(() => {
 		galleryAutoplay.value = true
 	})
@@ -133,7 +152,55 @@
 		galleryAutoplay.value = false
 	})
 
-	const venue = computed(() => venues.find(v => v.id === venueId.value) || venues[0])
+	// 兼容mock数据结构，如果API数据为空则使用mock
+	const displayVenue = computed(() => {
+		if (venue.value) {
+			// 解析images字段（从JSON字符串转为数组）
+			let imagesArray: string[] = []
+			try {
+				if (venue.value.images) {
+					imagesArray = JSON.parse(venue.value.images)
+				}
+			} catch (e) {
+				console.error('解析images失败:', e)
+			}
+			
+			// 如果解析失败或为空，使用cover_image
+			if (!imagesArray || imagesArray.length === 0) {
+				imagesArray = [venue.value.cover_image]
+			}
+			
+			// 将API数据转换为页面需要的格式
+			return {
+				id: venue.value.id.toString(),
+				nameKey: 'venue.name',
+				locationKey: 'venue.location',
+				experienceTitleKey: 'venue.experienceTitle',
+				experienceDescKey: 'venue.experienceDesc',
+				gallery: imagesArray,
+				hasVideo: false,
+				amenities: venue.value.facilities.map(f => ({
+					name: f.name,
+					name_en: f.name_en,
+					labelKey: 'venue.facility',
+					icon: f.icon
+				})),
+				bentoCards: venue.value.features.map(f => ({
+					spaceType: 'feature',
+					title: f.title,
+					title_en: f.title_en,
+					description: f.description,
+					description_en: f.description_en,
+					titleKey: 'venue.featureTitle',
+					descKey: 'venue.featureDesc',
+					image: f.image
+				})),
+				houseRules: venue.value.rules
+			}
+		}
+		// 回退到mock数据
+		return venues.find(v => v.id === venueId.value) || venues[0]
+	})
 
 	const onGalleryChange = (e : { detail : { current : number } }) => {
 		galleryIndex.value = e.detail.current
@@ -146,7 +213,7 @@
 	const previewGallery = (index : number) => {
 		uni.previewImage({
 			current: index,
-			urls: venue.value.gallery
+			urls: displayVenue.value.gallery.map((img: string) => getImageUrl(img))
 		})
 	}
 
@@ -167,7 +234,7 @@
 	}
 
 	const openMap = () => {
-		uni.showToast({ title: t(venue.value.locationKey).split('\n')[0], icon: 'none', duration: 2500 })
+		uni.showToast({ title: t(displayVenue.value.locationKey).split('\n')[0], icon: 'none', duration: 2500 })
 	}
 
 	const goBooking = () => {

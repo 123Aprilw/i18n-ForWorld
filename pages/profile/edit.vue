@@ -12,10 +12,10 @@
 				<view class="avatar-section__wrap">
 					<view class="avatar-section__glow" />
 					<view class="avatar-section__ring">
-						<image class="avatar-section__image" :src="avatar" mode="aspectFill" />
+						<image class="avatar-section__image" :src="getImageUrl(avatar)" mode="aspectFill" />
 					</view>
 					<view class="avatar-section__camera">
-						<image class="avatar-section__camera-icon" :src="icons.profile.camera" mode="aspectFit" />
+						<image class="avatar-section__camera-icon" :src="getImageUrl(icons.profile.camera)" mode="aspectFit" />
 					</view>
 				</view>
 				<text class="avatar-section__hint">{{ t('profile.tapToChange') }}</text>
@@ -75,18 +75,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useLocale } from '@/composables/useLocale'
+import { useUserProfile } from '@/composables/useUserProfile'
+import { getImageUrl } from '@/src/config/env'
 import { icons } from '@/utils/icons'
 import PageHeader from '@/components/PageHeader.vue'
 import BottomActionBar from '@/components/BottomActionBar.vue'
 import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 
 const { t } = useLocale()
+const { userProfile, fetchUserProfile, updateUserProfile, loading } = useUserProfile()
+
 const avatar = ref(icons.profile.avatar)
 const nickname = ref('')
 const email = ref('')
 const avatarSheetRef = ref<{ open: () => void; close: () => void } | null>(null)
+
+onMounted(async () => {
+	try {
+		await fetchUserProfile()
+		if (userProfile.value) {
+			nickname.value = userProfile.value.nickname || ''
+			email.value = userProfile.value.email || ''
+			avatar.value = userProfile.value.avatar || icons.profile.avatar
+		}
+	} catch (error) {
+		console.error('获取用户资料失败:', error)
+	}
+})
 
 const chooseAvatar = () => {
 	avatarSheetRef.value?.open()
@@ -108,9 +125,24 @@ const pickImage = (source: 'camera' | 'album') => {
 	})
 }
 
-const handleSave = () => {
-	uni.showToast({ title: t('profile.saveChanges'), icon: 'success' })
-	setTimeout(() => uni.navigateBack(), 1000)
+const handleSave = async () => {
+	if (!nickname.value.trim()) {
+		uni.showToast({ title: t('profile.nicknameRequired'), icon: 'none' })
+		return
+	}
+	
+	try {
+		await updateUserProfile({
+			nickname: nickname.value,
+			avatar: avatar.value,
+			bio: '' // 如果需要简介字段，可以添加
+		})
+		
+		uni.showToast({ title: t('profile.saveSuccess'), icon: 'success' })
+		setTimeout(() => uni.navigateBack(), 1000)
+	} catch (error) {
+		console.error('保存用户资料失败:', error)
+	}
 }
 </script>
 

@@ -31,7 +31,7 @@
 						<view class="field__input field__input--code">
 							<input v-model="code" type="text" :placeholder="t('login.codePlaceholder')"
 								placeholder-class="placeholder" />
-							<text class="field__code-btn" @click="getCode">{{ t('login.getCode') }}</text>
+							<text class="field__code-btn" @click="getCode">{{ countdown > 0 ? `${countdown}s` : t('login.getCode') }}</text>
 						</view>
 					</view>
 					<view v-if="activeTab === 'password'" class="field">
@@ -58,6 +58,26 @@
 					<view class="submit-btn" @click="handleLogin">
 						<text>{{ t('login.submit') }}</text>
 					</view>
+
+					<!-- 用户协议弹出框 -->
+					<uv-popup ref="agreementPopupRef" mode="center" :round="16" :closeOnClickOverlay="false">
+						<view class="agreement-popup">
+							<view class="agreement-popup__header">
+								<text class="agreement-popup__title">{{ t('login.agreementPopupTitle') }}</text>
+							</view>
+							<scroll-view scroll-y class="agreement-popup__content">
+								<text class="agreement-popup__text">{{ t('login.agreementPopupContent') }}</text>
+							</scroll-view>
+							<view class="agreement-popup__footer">
+								<view class="agreement-popup__btn agreement-popup__btn--cancel" @click="closeAgreementPopup">
+									<text>{{ t('login.disagree') }}</text>
+								</view>
+								<view class="agreement-popup__btn agreement-popup__btn--confirm" @click="confirmAgreement">
+									<text>{{ t('login.agree') }}</text>
+								</view>
+							</view>
+						</view>
+					</uv-popup>
 				</view>
 			</view>
 			<view class="login-footer">
@@ -72,29 +92,128 @@
 <script setup lang="ts">
 	import { ref } from 'vue'
 	import { useLocale } from '@/composables/useLocale'
+	import { useAuth } from '@/composables/useAuth'
 	import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 	import BrandLogo from '@/components/BrandLogo.vue'
 	import { icons } from '@/utils/icons'
 	import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 
 	const { t } = useLocale()
+	const { login, emailLogin, sendVerificationCode, loading } = useAuth()
+	
 	const activeTab = ref<'code' | 'password'>('code')
 	const email = ref('')
 	const code = ref('')
 	const password = ref('')
 	const agreed = ref(false)
 	const showPassword = ref(false)
+	const countdown = ref(0)
+	let countdownTimer: number | null = null
+	const agreementPopupRef = ref()
+	const pendingLogin = ref(false)
 
-	const getCode = () => {
-		uni.showToast({ title: t('login.getCode'), icon: 'none' })
-	}
-
-	const handleLogin = () => {
-		if (!agreed.value) {
-			uni.showToast({ title: t('login.agreement'), icon: 'none' })
+	const getCode = async () => {
+		if (!email.value) {
+			uni.showToast({ title: t('login.emailPlaceholder'), icon: 'none' })
 			return
 		}
-		uni.reLaunch({ url: '/pages/home/home' })
+		
+		// 检查邮箱格式
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+		if (!emailRegex.test(email.value)) {
+			uni.showModal({
+				title: t('login.emailFormatErrorTitle'),
+				content: t('login.emailFormatErrorContent'),
+				showCancel: false,
+				confirmText: t('login.confirm')
+			})
+			return
+		}
+		
+		// 检查是否为谷歌邮箱
+		if (!email.value.endsWith('@gmail.com')) {
+			uni.showModal({
+				title: t('login.emailErrorTitle'),
+				content: t('login.emailErrorContent'),
+				showCancel: false,
+				confirmText: t('login.confirm')
+			})
+			return
+		}
+		
+		if (countdown.value > 0) return
+		
+		try {
+			await sendVerificationCode(email.value, 'emaillogin')
+			uni.showToast({ title: t('login.codeSent'), icon: 'success' })
+			
+			// 开始倒计时
+			countdown.value = 60
+			countdownTimer = setInterval(() => {
+				countdown.value--
+				if (countdown.value <= 0) {
+					if (countdownTimer) clearInterval(countdownTimer)
+				}
+			}, 1000)
+		} catch (error) {
+			console.error('发送验证码失败:', error)
+		}
+	}
+
+	const handleLogin = async () => {
+		if (!email.value) {
+			uni.showToast({ title: t('login.emailPlaceholder'), icon: 'none' })
+			return
+		}
+		
+		try {
+			if (activeTab.value === 'code') {
+				// 邮箱验证码登录
+				if (!code.value) {
+					uni.showToast({ title: t('login.codePlaceholder'), icon: 'none' })
+					return
+				}
+			} else {
+				// 密码登录
+				if (!password.value) {
+					uni.showToast({ title: t('login.passwordPlaceholder'), icon: 'none' })
+					return
+				}
+			}
+			
+			// 如果没有勾选协议，弹出协议窗口
+			if (!agreed.value) {
+				pendingLogin.value = true
+				agreementPopupRef.value?.open()
+				return
+			}
+			
+			if (activeTab.value === 'code') {
+				await emailLogin({ email: email.value, captcha: code.value })
+			} else {
+				await login({ account: email.value, password: password.value })
+			}
+			
+			uni.reLaunch({ url: '/pages/home/home' })
+		} catch (error) {
+			console.error('登录失败:', error)
+		}
+	}
+
+	const closeAgreementPopup = () => {
+		agreementPopupRef.value?.close()
+		pendingLogin.value = false
+	}
+
+	const confirmAgreement = () => {
+		agreed.value = true
+		agreementPopupRef.value?.close()
+		
+		// 如果是待登录状态，继续登录流程
+		if (pendingLogin.value) {
+			pendingLogin.value = false
+			handleLogin()
+		}
 	}
 
 	const goRegister = () => uni.navigateTo({ url: '/pages/register/register' })
@@ -295,5 +414,64 @@
 		margin-top: 80rpx;
 		font-size: 28rpx;
 		color: #424754;
+	}
+
+	.agreement-popup {
+		width: 520rpx;
+		background: #fff;
+		border-radius: 20rpx;
+		overflow: hidden;
+		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+	}
+
+	.agreement-popup__header {
+		padding: 20rpx 24rpx;
+		text-align: center;
+		border-bottom: 1rpx solid #E5E7EB;
+		background: #F8F9FF;
+	}
+
+	.agreement-popup__title {
+		font-size: 30rpx;
+		font-weight: 600;
+		color: #0058BE;
+	}
+
+	.agreement-popup__content {
+		height: 180rpx;
+		padding: 20rpx 24rpx;
+		background: #fff;
+	}
+
+	.agreement-popup__text {
+		font-size: 26rpx;
+		line-height: 1.6;
+		color: #424754;
+		text-align: center;
+	}
+
+	.agreement-popup__footer {
+		display: flex;
+		border-top: 1rpx solid #E5E7EB;
+		background: #F8F9FF;
+	}
+
+	.agreement-popup__btn {
+		flex: 1;
+		padding: 24rpx;
+		text-align: center;
+		font-size: 28rpx;
+		font-weight: 500;
+		
+		&--cancel {
+			color: #6B7280;
+			border-right: 1rpx solid #E5E7EB;
+			background: #fff;
+		}
+		
+		&--confirm {
+			color: #fff;
+			background: #0058BE;
+		}
 	}
 </style>

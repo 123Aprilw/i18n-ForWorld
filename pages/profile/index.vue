@@ -7,11 +7,11 @@
 		<scroll-view scroll-y class="profile-body" :show-scrollbar="false">
 			<view class="profile-card">
 				<view class="profile-card__avatar-wrap">
-					<image class="profile-card__avatar" :src="icons.profile.avatar" mode="aspectFill" />
+					<image class="profile-card__avatar" :src="getImageUrl(displayAvatar)" mode="aspectFill" />
 				</view>
 				<view class="profile-card__info">
-					<text class="profile-card__name">{{ t('profile.userName') }}</text>
-					<text class="profile-card__email">{{ t('profile.userEmail') }}</text>
+					<text class="profile-card__name">{{ displayName }}</text>
+					<text class="profile-card__email">{{ displayEmail }}</text>
 				</view>
 			</view>
 
@@ -25,12 +25,12 @@
 				>
 					<view class="menu-item__left">
 						<view class="menu-item__icon-wrap">
-							<image class="menu-item__icon" :src="item.icon" mode="aspectFit" />
+							<image class="menu-item__icon" :src="getImageUrl(item.icon)" mode="aspectFit" />
 							<view v-if="item.badge" class="menu-item__badge" />
 						</view>
 						<text class="menu-item__label">{{ t(item.labelKey) }}</text>
 					</view>
-					<image class="menu-item__arrow" :src="icons.profile.arrow" mode="aspectFit" />
+					<image class="menu-item__arrow" :src="getImageUrl(icons.profile.arrow)" mode="aspectFit" />
 				</view>
 			</view>
 		</scroll-view>
@@ -41,8 +41,11 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
 import { useLocale } from '@/composables/useLocale'
 import { useContactPopup } from '@/composables/useContactPopup'
+import { useUserProfile } from '@/composables/useUserProfile'
+import { getImageUrl } from '@/src/config/env'
 import BrandLogo from '@/components/BrandLogo.vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
@@ -52,8 +55,24 @@ import ContactPopupHost from '@/components/ContactPopupHost.vue'
 
 const { t } = useLocale()
 const { openContactPopup } = useContactPopup()
+const { userProfile, fetchUserProfile } = useUserProfile()
 
-const menuItems = [
+const notificationBadge = ref(false)
+
+onMounted(async () => {
+	try {
+		await fetchUserProfile()
+	} catch (error) {
+		console.error('获取用户资料失败:', error)
+	}
+})
+
+// 使用API数据或默认值
+const displayName = computed(() => userProfile.value?.nickname || t('profile.userName'))
+const displayEmail = computed(() => userProfile.value?.email || t('profile.userEmail'))
+const displayAvatar = computed(() => userProfile.value?.avatar || icons.profile.avatar)
+
+const menuItems = computed(() => [
 	{
 		key: 'edit',
 		labelKey: 'profile.editProfile',
@@ -73,7 +92,7 @@ const menuItems = [
 		icon: icons.profile.notification,
 		path: '/pages/message/list',
 		reLaunch: true,
-		badge: true
+		badge: notificationBadge.value
 	},
 	{
 		key: 'contact',
@@ -81,9 +100,9 @@ const menuItems = [
 		icon: icons.profile.contact,
 		action: 'contact'
 	}
-]
+])
 
-const handleMenu = (item: (typeof menuItems)[0]) => {
+const handleMenu = (item: (typeof menuItems.value)[0]) => {
 	if (item.action === 'contact') {
 		openContactPopup()
 		return

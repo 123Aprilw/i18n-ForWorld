@@ -8,6 +8,10 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./*"]
+		},
 		"types": [
 			"@dcloudio/types",
 			"@dcloudio/uni-app",
@@ -15,5 +19,5 @@
 		],
 		"typeRoots": ["./node_modules/@types", "./node_modules/@dcloudio/types"]
 	},
-	"include": ["src/**/*", "env.d.ts"]
+	"include": ["src/**/*", "env.d.ts", "**/*.ts", "**/*.vue"]
 }

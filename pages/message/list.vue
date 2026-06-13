@@ -26,7 +26,9 @@
 </template>
 
 <script setup lang="ts">
+	import { ref, computed, onMounted } from 'vue'
 	import { useLocale } from '@/composables/useLocale'
+	import { useNotification } from '@/composables/useNotification'
 	import { messages, type Message } from '@/utils/mock'
 	import { icons } from '@/utils/icons'
 	import BrandLogo from '@/components/BrandLogo.vue'
@@ -35,6 +37,9 @@
 	import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 
 	const { t } = useLocale()
+	const { notifications, fetchNotifications, markAsRead, fetchUnreadCount } = useNotification()
+
+	const activeType = ref('1') // 1系统/2订单/3预约提醒
 
 	const iconMap = { notice: 'bell', reservation: 'calendar', payment: icons.shopping }
 	const typeLabel : Record<string, string> = {
@@ -43,7 +48,50 @@
 		payment: 'message.paymentNotice'
 	}
 
-	const handleMessage = (msg : Message) => {
+	onMounted(async () => {
+		try {
+			// 获取未读数量
+			await fetchUnreadCount()
+			// 获取消息列表
+			await fetchNotifications(activeType.value, '0', 10)
+		} catch (error) {
+			console.error('获取消息列表失败:', error)
+		}
+	})
+
+	// 将API数据转换为页面需要的格式
+	const displayMessages = computed(() => {
+		if (notifications.value && notifications.value.length > 0) {
+			return notifications.value.map(notification => {
+				// 根据type映射到页面类型
+				let pageType = 'notice'
+				if (notification.type === 2) pageType = 'reservation'
+				if (notification.type === 3) pageType = 'payment'
+				
+				return {
+					id: notification.id,
+					type: pageType,
+					read: notification.is_read === 1,
+					time: new Date(notification.createtime * 1000).toLocaleDateString(),
+					titleKey: 'message.title', // 需要根据实际内容调整
+					contentKey: 'message.content' // 需要根据实际内容调整
+				}
+			})
+		}
+		// 回退到mock数据
+		return messages
+	})
+
+	const messages = computed(() => displayMessages.value)
+
+	const handleMessage = async (msg : Message) => {
+		// 标记为已读
+		try {
+			await markAsRead(msg.id.toString(), '0')
+		} catch (error) {
+			console.error('标记已读失败:', error)
+		}
+
 		if (msg.type === 'payment') {
 			uni.navigateTo({ url: '/pages/order/detail?type=pendingPayment' })
 		} else if (msg.type === 'reservation') {

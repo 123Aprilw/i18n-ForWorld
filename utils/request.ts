@@ -1,6 +1,6 @@
 import env from '@/src/config/env.ts'
 const config = {
-	baseUrl: env, // 你的接口地址
+	baseUrl: env.baseUrl, // 你的接口地址
 	timeout: 10000, // 超时时间
 	loading: true, // 是否默认开启loading
 }
@@ -46,7 +46,7 @@ const responseInterceptors = (res : any) => {
 		const data = res.data
 
 		// 后端自定义成功code
-		if (data.code === 200) {
+		if (data.code === 1) {
 			return data
 		}
 

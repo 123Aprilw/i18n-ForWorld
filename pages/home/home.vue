@@ -7,14 +7,15 @@
 		<scroll-view scroll-y class="home-body">
 			<text class="section-title">{{ t('home.sectionTitle') }}</text>
 			<view v-for="venue in venues" :key="venue.id" class="venue-card" @click="goVenue(venue.id)">
-				<image class="venue-card__image" :src="venue.image" mode="aspectFill" />
+				<image class="venue-card__image" :src="getImageUrl(venue.cover_image)" mode="aspectFill" />
 				<view class="venue-card__body">
-					<text class="venue-card__name">{{ t(venue.nameKey) }}</text>
-					<text class="venue-card__desc">{{ t(venue.descKey) }}</text>
+					<text class="venue-card__name">{{ venue.name }}</text>
+					<text class="venue-card__subtitle">{{ venue.subtitle }}</text>
+					<text class="venue-card__address">{{ venue.address }}</text>
 					<view class="venue-card__footer">
 						<view class="venue-card__icons">
-							<image v-for="(icon, iconIndex) in venue.facilityIcons" :key="iconIndex"
-								class="venue-card__icon" :src="icon" mode="aspectFit" />
+							<image v-for="(facility, iconIndex) in venue.facilities" :key="iconIndex"
+								class="venue-card__icon" :src="getImageUrl(facility.icon)" mode="aspectFit" />
 						</view>
 						<view class="venue-card__btn" @click.stop="goVenue(venue.id)">
 							<text>{{ t('common.bookNow') }}</text>
@@ -32,6 +33,7 @@
 	import { onMounted } from 'vue'
 	import { useLocale } from '@/composables/useLocale'
 	import { useVenueList } from '@/composables/useVenueList'
+	import { getImageUrl } from '@/src/config/env'
 	import BrandLogo from '@/components/BrandLogo.vue'
 	import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 	import AppTabBar from '@/components/AppTabBar.vue'
@@ -40,10 +42,18 @@
 	const { t } = useLocale()
 	const { venues, fetchVenues } = useVenueList()
 
-	onMounted(fetchVenues)
+	onMounted(() => {
+		fetchVenues().catch(error => {
+			console.error('Failed to fetch venues:', error)
+		})
+	})
 
 	const goVenue = (id : string) => {
-		uni.navigateTo({ url: `/pages/venue/detail?id=${id}` })
+		try {
+			uni.navigateTo({ url: `/pages/venue/detail?id=${id}` })
+		} catch (error) {
+			console.error('Navigation error:', error)
+		}
 	}
 </script>
 
@@ -102,13 +112,21 @@
 		font-size: 32rpx;
 		font-weight: 500;
 		color: #0B1C30;
-		margin-bottom: 12rpx;
+		margin-bottom: 8rpx;
 	}
 
-	.venue-card__desc {
+	.venue-card__subtitle {
 		display: block;
 		font-size: 26rpx;
 		color: #424754;
+		line-height: 1.6;
+		margin-bottom: 8rpx;
+	}
+
+	.venue-card__address {
+		display: block;
+		font-size: 24rpx;
+		color: #6B7280;
 		line-height: 1.6;
 		margin-bottom: 24rpx;
 	}

@@ -40,7 +40,18 @@
 		"terms": "Terms of Service",
 		"submit": "Login",
 		"noAccount": "Don't have an account?",
-		"registerNow": "Register Now"
+		"registerNow": "Register Now",
+		"emailErrorTitle": "Email Error",
+		"emailErrorContent": "Please use a Gmail email address (@gmail.com) to login.",
+		"emailFormatErrorTitle": "Invalid Email Format",
+		"emailFormatErrorContent": "Please enter a valid email address.",
+		"confirm": "OK",
+		"agreementPopupTitle": "Terms of Service",
+		"agreementPopupContent": "Please read and agree to the Terms of Service before logging in.",
+		"agree": "Agree",
+		"disagree": "Disagree",
+		"agreementRequired": "Please agree to the Terms of Service",
+		"codeSent": "Verification code sent"
 	},
 	"register": {
 		"title": "Create Account",
@@ -54,7 +65,20 @@
 		"agreement": "I agree to the Terms of Service",
 		"submit": "Register",
 		"hasAccount": "Already have an account?",
-		"loginNow": "Login"
+		"loginNow": "Login",
+		"emailErrorTitle": "Email Error",
+		"emailErrorContent": "Please use a Gmail email address (@gmail.com) to register.",
+		"emailFormatErrorTitle": "Invalid Email Format",
+		"emailFormatErrorContent": "Please enter a valid email address.",
+		"confirm": "OK",
+		"agreementPopupTitle": "Terms of Service",
+		"agreementPopupContent": "Please read and agree to the Terms of Service before registering.",
+		"agree": "Agree",
+		"disagree": "Disagree",
+		"agreementRequired": "Please agree to the Terms of Service",
+		"codeSent": "Verification code sent",
+		"success": "Registration successful",
+		"passwordLengthError": "Password must be 6-30 characters"
 	},
 	"resetPassword": {
 		"title": "Reset Password",
@@ -66,7 +90,15 @@
 		"newPassword": "New Password",
 		"passwordPlaceholder": "Enter new password",
 		"submit": "Reset Password",
-		"rememberPassword": "Remember your password?"
+		"rememberPassword": "Remember your password?",
+		"emailErrorTitle": "Email Error",
+		"emailErrorContent": "Please use a Gmail email address (@gmail.com) to reset password.",
+		"emailFormatErrorTitle": "Invalid Email Format",
+		"emailFormatErrorContent": "Please enter a valid email address.",
+		"confirm": "OK",
+		"codeSent": "Verification code sent",
+		"success": "Password reset successful",
+		"passwordLengthError": "Password must be 6-30 characters"
 	},
 	"home": {
 		"sectionTitle": "Workspace Details & Services"

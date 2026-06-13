@@ -61,14 +61,14 @@
 					<view class="info-card__item">
 						<text class="info-card__label">{{ t('order.reservationDate') }}</text>
 						<view class="info-card__value-row">
-							<image class="info-card__icon" :src="icons.yuyue" mode="aspectFit" />
+							<image class="info-card__icon" :src="getImageUrl(icons.yuyue)" mode="aspectFit" />
 							<text>{{ displayDate }}</text>
 						</view>
 					</view>
 					<view class="info-card__item">
 						<text class="info-card__label">{{ t('order.reservationTime') }}</text>
 						<view class="info-card__value-row">
-							<image class="info-card__icon" :src="icons.time" mode="aspectFit" />
+							<image class="info-card__icon" :src="getImageUrl(icons.time)" mode="aspectFit" />
 							<text>{{ time }}</text>
 						</view>
 					</view>
@@ -173,15 +173,20 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed } from 'vue'
+	import { ref, computed, onMounted } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import { useLocale } from '@/composables/useLocale'
+	import { usePayment } from '@/composables/usePayment'
+	import { useReservationOrder } from '@/composables/useReservationOrder'
 	import { icons } from '@/utils/icons'
+	import { getImageUrl } from '@/src/config/env'
 	import PageHeader from '@/components/PageHeader.vue'
 	import BottomActionBar from '@/components/BottomActionBar.vue'
 	import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 
 	const { t } = useLocale()
+	const { createStripePayment, loading: paymentLoading } = usePayment()
+	const { getOrderDetail, cancelOrder } = useReservationOrder()
 
 	const type = ref('reserved')
 	const orderId = ref('ORD001')
@@ -211,6 +216,24 @@
 		if (type.value === 'arrived') checkedIn.value = true
 	})
 
+	onMounted(async () => {
+		// 如果有订单ID，获取订单详情
+		if (orderId.value && orderId.value !== 'ORD001') {
+			try {
+				const orderDetail = await getOrderDetail(orderId.value)
+				if (orderDetail) {
+					// 更新页面数据
+					date.value = orderDetail.reserve_date
+					time.value = `${orderDetail.start_time} - ${orderDetail.end_time}`
+					price.value = orderDetail.amount
+					// 可以根据需要更新其他字段
+				}
+			} catch (error) {
+				console.error('获取订单详情失败:', error)
+			}
+		}
+	})
+
 	const pageTitle = computed(() => {
 		const map : Record<string, string> = {
 			reserved: 'order.detail',
@@ -223,7 +246,7 @@
 		return t(map[type.value] || 'order.detail')
 	})
 
-	const venueImage = computed(() => venueImageMap[venueKey.value] || '/static/images/venues/venue-3.png')
+	const venueImage = computed(() => getImageUrl(venueImageMap[venueKey.value] || '/static/images/venues/venue-3.png'))
 	const displayDate = computed(() => t(dateKey.value))
 	const formattedPrice = computed(() => `${price.value.toLocaleString()}円`)
 
@@ -262,9 +285,31 @@
 		`orderId=${orderId.value}&venueKey=${venueKey.value}&dateKey=${dateKey.value}&date=${date.value}&time=${encodeURIComponent(time.value)}&seat=${seat.value}&price=${price.value}`
 	)
 
-	const handlePay = () => {
-		const next = payMethod.value === 'paypay' ? 'cashPayment' : 'completePayment'
-		uni.redirectTo({ url: `/pages/order/detail?type=${next}&${detailQuery.value}` })
+	const handlePay = async () => {
+		if (!orderId.value || orderId.value === 'ORD001') {
+			// 如果是模拟订单，直接跳转
+			const next = payMethod.value === 'paypay' ? 'cashPayment' : 'completePayment'
+			uni.redirectTo({ url: `/pages/order/detail?type=${next}&${detailQuery.value}` })
+			return
+		}
+
+		try {
+			// 调用支付API
+			const paymentMethod = payMethod.value === 'card' ? '1' : '2' // 1信用卡/2PayPay
+			await createPayment({
+				order_id: orderId.value,
+				payment_method: paymentMethod
+			})
+			
+			uni.showToast({ title: t('order.paymentSuccess'), icon: 'success' })
+			
+			// 跳转到支付完成页面
+			const next = payMethod.value === 'paypay' ? 'cashPayment' : 'completePayment'
+			uni.redirectTo({ url: `/pages/order/detail?type=${next}&${detailQuery.value}` })
+		} catch (error) {
+			console.error('支付失败:', error)
+			uni.showToast({ title: t('order.paymentFailed'), icon: 'none' })
+		}
 	}
 
 	const handleReReserve = () => {

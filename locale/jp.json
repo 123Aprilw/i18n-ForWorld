@@ -40,7 +40,18 @@
 		"terms": "利用規約",
 		"submit": "ログイン",
 		"noAccount": "アカウントをお持ちでないですか？",
-		"registerNow": "今すぐ登録"
+		"registerNow": "今すぐ登録",
+		"emailErrorTitle": "メールアドレスエラー",
+		"emailErrorContent": "ログインにはGmailメールアドレス（@gmail.com）を使用してください。",
+		"emailFormatErrorTitle": "メールアドレス形式エラー",
+		"emailFormatErrorContent": "有効なメールアドレスを入力してください。",
+		"confirm": "OK",
+		"agreementPopupTitle": "利用規約",
+		"agreementPopupContent": "ログイン前に利用規約をお読みいただき、同意してください。",
+		"agree": "同意する",
+		"disagree": "同意しない",
+		"agreementRequired": "利用規約に同意してください",
+		"codeSent": "認証コードを送信しました"
 	},
 	"register": {
 		"title": "アカウント登録",
@@ -54,7 +65,20 @@
 		"agreement": "利用規約 に同意します",
 		"submit": "登録する",
 		"hasAccount": "すでにアカウントをお持ちですか？",
-		"loginNow": "ログイン"
+		"loginNow": "ログイン",
+		"emailErrorTitle": "メールアドレスエラー",
+		"emailErrorContent": "登録にはGmailメールアドレス（@gmail.com）を使用してください。",
+		"emailFormatErrorTitle": "メールアドレス形式エラー",
+		"emailFormatErrorContent": "有効なメールアドレスを入力してください。",
+		"confirm": "OK",
+		"agreementPopupTitle": "利用規約",
+		"agreementPopupContent": "登録前に利用規約をお読みいただき、同意してください。",
+		"agree": "同意する",
+		"disagree": "同意しない",
+		"agreementRequired": "利用規約に同意してください",
+		"codeSent": "認証コードを送信しました",
+		"success": "登録が完了しました",
+		"passwordLengthError": "パスワードは6〜30文字である必要があります"
 	},
 	"resetPassword": {
 		"title": "パスワードの再設定",
@@ -66,7 +90,15 @@
 		"newPassword": "新しいパスワード",
 		"passwordPlaceholder": "新しいパスワードを入力",
 		"submit": "パスワードを再設定",
-		"rememberPassword": "パスワードを思い出した"
+		"rememberPassword": "パスワードを思い出した",
+		"emailErrorTitle": "メールアドレスエラー",
+		"emailErrorContent": "パスワード再設定にはGmailメールアドレス（@gmail.com）を使用してください。",
+		"emailFormatErrorTitle": "メールアドレス形式エラー",
+		"emailFormatErrorContent": "有効なメールアドレスを入力してください。",
+		"confirm": "OK",
+		"codeSent": "認証コードを送信しました",
+		"success": "パスワードの再設定が完了しました",
+		"passwordLengthError": "パスワードは6〜30文字である必要があります"
 	},
 	"home": {
 		"sectionTitle": "ワークスペース詳細とサービス"

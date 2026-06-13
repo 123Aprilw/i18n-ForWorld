@@ -90,9 +90,9 @@ onShow(() => {
 
 const tabs = [
 	{ key: 'reserved', labelKey: 'order.reserved' },
+	{ key: 'arrived', labelKey: 'order.arrived' },
 	{ key: 'pending', labelKey: 'order.pending' },
 	{ key: 'paid', labelKey: 'order.paid' },
-	{ key: 'arrived', labelKey: 'order.arrived' },
 	{ key: 'cancelled', labelKey: 'order.cancelled' }
 ]
 
@@ -275,15 +275,20 @@ const goDetailType = (type: string, order: Order) => {
 }
 
 .order-card__status {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	padding: 8rpx 24rpx;
 	background: #D9E7FF;
 	border-radius: 9999rpx;
 	flex-shrink: 0;
+	box-sizing: border-box;
 
 	text {
 		font-size: 24rpx;
 		color: #3E5980;
-		line-height: 1.63;
+		line-height: 1;
+		text-align: center;
 	}
 
 	&--cancelled {

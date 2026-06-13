@@ -523,7 +523,7 @@ const confirmBooking = () => {
 }
 
 .seat-section__bar {
-	width: 36rpx;
+	width: 5rpx;
 	height: 26rpx;
 	border-radius: 4rpx;
 	background: #3B82F6;

@@ -51,7 +51,7 @@
 							<uv-icon name="checkmark" color="#FFFFFF" size="20" />
 						</view>
 					</view>
-					<text class="qr-card__hint">{{ isCheckedIn ? t('order.qrVerified') : t('order.qrHint') }}</text>
+					<text class="qr-card__hint">{{ qrHintText }}</text>
 					<text v-if="!isCheckedIn" class="qr-card__simulate">{{ t('order.tapToScan') }}</text>
 				</view>
 
@@ -228,6 +228,12 @@
 	const formattedPrice = computed(() => `${price.value.toLocaleString()}円`)
 
 	const isCheckedIn = computed(() => type.value === 'arrived' || checkedIn.value)
+
+	const qrHintText = computed(() => {
+		if (type.value === 'arrived') return t('order.qrExitHint')
+		if (isCheckedIn.value) return t('order.qrVerified')
+		return t('order.qrHint')
+	})
 
 	const showReservationDetails = computed(() =>
 		['reserved', 'arrived', 'cancelled', 'pendingPayment', 'completePayment', 'cashPayment'].includes(type.value)

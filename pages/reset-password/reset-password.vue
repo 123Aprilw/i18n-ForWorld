@@ -9,7 +9,7 @@
 					<view class="field">
 						<text class="field__label">{{ t('resetPassword.email') }}</text>
 						<view class="field__input field__input--filled">
-							<input v-model="email" :placeholder="t('resetPassword.emailPlaceholder')" placeholder-class="placeholder" />
+							<input v-model="email" :maxlength="100" :placeholder="t('resetPassword.emailPlaceholder')" placeholder-class="placeholder" />
 						</view>
 					</view>
 					<view class="field">
@@ -65,6 +65,9 @@ const showPassword = ref(false)
 const countdown = ref(0)
 let countdownTimer: number | null = null
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+const isValidEmail = (val: string) => val.length <= 100 && EMAIL_REGEX.test(val)
+
 const getCode = async () => {
 	if (!email.value) {
 		uni.showToast({ title: t('resetPassword.emailPlaceholder'), icon: 'none' })
@@ -72,22 +75,10 @@ const getCode = async () => {
 	}
 	
 	// 检查邮箱格式
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-	if (!emailRegex.test(email.value)) {
+	if (!isValidEmail(email.value)) {
 		uni.showModal({
 			title: t('resetPassword.emailFormatErrorTitle'),
 			content: t('resetPassword.emailFormatErrorContent'),
-			showCancel: false,
-			confirmText: t('resetPassword.confirm')
-		})
-		return
-	}
-	
-	// 检查是否为谷歌邮箱
-	if (!email.value.endsWith('@gmail.com')) {
-		uni.showModal({
-			title: t('resetPassword.emailErrorTitle'),
-			content: t('resetPassword.emailErrorContent'),
 			showCancel: false,
 			confirmText: t('resetPassword.confirm')
 		})
@@ -110,12 +101,27 @@ const getCode = async () => {
 		}, 1000)
 	} catch (error) {
 		console.error('发送验证码失败:', error)
+		const msg = (error as any)?.msg
+		if (msg) {
+			uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+		}
 	}
 }
 
 const handleReset = async () => {
 	if (!email.value) {
 		uni.showToast({ title: t('resetPassword.emailPlaceholder'), icon: 'none' })
+		return
+	}
+
+	// 提交时也验证邮箱格式
+	if (!isValidEmail(email.value)) {
+		uni.showModal({
+			title: t('resetPassword.emailFormatErrorTitle'),
+			content: t('resetPassword.emailFormatErrorContent'),
+			showCancel: false,
+			confirmText: t('resetPassword.confirm')
+		})
 		return
 	}
 	
@@ -147,6 +153,10 @@ const handleReset = async () => {
 		}, 1500)
 	} catch (error) {
 		console.error('重置密码失败:', error)
+		const msg = (error as any)?.msg
+		if (msg) {
+			uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+		}
 	}
 }
 

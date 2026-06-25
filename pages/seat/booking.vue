@@ -1,5 +1,6 @@
 <template>
 	<view class="booking-page">
+		<PageLoading :visible="pageLoading" type="detail" />
 		<PageHeader :title="t('seat.title')" show-lang glass />
 		<scroll-view scroll-y class="booking-body">
 			<view class="booking-hero">
@@ -48,6 +49,7 @@ import { useLocale } from '@/composables/useLocale'
 import PageHeader from '@/components/PageHeader.vue'
 import BottomActionBar from '@/components/BottomActionBar.vue'
 import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
+import PageLoading from '@/components/PageLoading.vue'
 
 const { t } = useLocale()
 const venueId = ref('1')
@@ -56,11 +58,16 @@ const time = ref('10:00-12:00')
 const spaceType = ref('')
 const status = ref<'available' | 'full'>('available')
 const selectedSeat = ref('')
+const pageLoading = ref(true)
 
 onLoad((query) => {
 	const venue = query?.venueId ? `venueId=${query.venueId}` : ''
 	const space = query?.space ? `&space=${query.space}` : ''
-	uni.redirectTo({ url: `/pages/seat/date?${venue}${space}` })
+	// 短暂显示 loading 后跳转
+	setTimeout(() => {
+		pageLoading.value = false
+		uni.redirectTo({ url: `/pages/seat/date?${venue}${space}` })
+	}, 600)
 })
 
 const legend = [
@@ -95,10 +102,8 @@ const confirmBooking = () => {
 		uni.showToast({ title: t('seat.selectSeat'), icon: 'none' })
 		return
 	}
-	const spaceQuery = spaceType.value ? `&space=${spaceType.value}` : ''
-	uni.navigateTo({
-		url: `/pages/order/detail?type=reserved&venueId=${venueId.value}&date=${date.value}&time=${time.value}&seat=${selectedSeat.value}${spaceQuery}`
-	})
+	// booking.vue 没有真实 orderId，跳转到订单列表页
+	uni.reLaunch({ url: '/pages/order/list' })
 }
 </script>
 

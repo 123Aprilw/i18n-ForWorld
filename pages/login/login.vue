@@ -22,7 +22,7 @@
 					<view class="field">
 						<text class="field__label">{{ t('login.email') }}</text>
 						<view class="field__input field__input--filled">
-							<input v-model="email" type="text" :placeholder="t('login.emailPlaceholder')"
+							<input v-model="email" type="text" :maxlength="100" :placeholder="t('login.emailPlaceholder')"
 								placeholder-class="placeholder" />
 						</view>
 					</view>
@@ -78,6 +78,23 @@
 							</view>
 						</view>
 					</uv-popup>
+
+					<!-- 邮箱格式错误弹出框 -->
+					<uv-popup ref="emailErrorPopupRef" mode="center" :round="16" :closeOnClickOverlay="true">
+						<view class="agreement-popup">
+							<view class="agreement-popup__header">
+								<text class="agreement-popup__title">{{ t('login.emailFormatErrorTitle') }}</text>
+							</view>
+							<view class="agreement-popup__content">
+								<text class="agreement-popup__text">{{ t('login.emailFormatErrorContent') }}</text>
+							</view>
+							<view class="agreement-popup__footer">
+								<view class="agreement-popup__btn agreement-popup__btn--confirm" @click="closeEmailErrorPopup">
+									<text>{{ t('login.confirm') }}</text>
+								</view>
+							</view>
+						</view>
+					</uv-popup>
 				</view>
 			</view>
 			<view class="login-footer">
@@ -90,7 +107,8 @@
 </template>
 
 <script setup lang="ts">
-	import { ref } from 'vue'
+	import { ref, onMounted } from 'vue'
+	import { onLoad } from '@dcloudio/uni-app'
 	import { useLocale } from '@/composables/useLocale'
 	import { useAuth } from '@/composables/useAuth'
 	import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
@@ -100,6 +118,23 @@
 
 	const { t } = useLocale()
 	const { login, emailLogin, sendVerificationCode, loading } = useAuth()
+
+	// 登录后跳转的目标页（由来源页通过 redirect 参数传入）
+	const redirectUrl = ref('')
+
+	onLoad((query) => {
+		if (query?.redirect) {
+			redirectUrl.value = decodeURIComponent(query.redirect as string)
+		}
+	})
+
+	// 已登录则直接跳首页（或来源页）
+	onMounted(() => {
+		const token = uni.getStorageSync('token')
+		if (token) {
+			uni.reLaunch({ url: '/pages/home/home' })
+		}
+	})
 	
 	const activeTab = ref<'code' | 'password'>('code')
 	const email = ref('')
@@ -110,7 +145,12 @@
 	const countdown = ref(0)
 	let countdownTimer: number | null = null
 	const agreementPopupRef = ref()
+	const emailErrorPopupRef = ref()
 	const pendingLogin = ref(false)
+
+	// 邮箱验证：本地部分最长64字符，整体最长100字符，必须包含@和有效域名
+	const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+	const isValidEmail = (val: string) => val.length <= 100 && EMAIL_REGEX.test(val)
 
 	const getCode = async () => {
 		if (!email.value) {
@@ -119,25 +159,8 @@
 		}
 		
 		// 检查邮箱格式
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-		if (!emailRegex.test(email.value)) {
-			uni.showModal({
-				title: t('login.emailFormatErrorTitle'),
-				content: t('login.emailFormatErrorContent'),
-				showCancel: false,
-				confirmText: t('login.confirm')
-			})
-			return
-		}
-		
-		// 检查是否为谷歌邮箱
-		if (!email.value.endsWith('@gmail.com')) {
-			uni.showModal({
-				title: t('login.emailErrorTitle'),
-				content: t('login.emailErrorContent'),
-				showCancel: false,
-				confirmText: t('login.confirm')
-			})
+		if (!isValidEmail(email.value)) {
+			emailErrorPopupRef.value?.open()
 			return
 		}
 		
@@ -157,12 +180,22 @@
 			}, 1000)
 		} catch (error) {
 			console.error('发送验证码失败:', error)
+			const msg = (error as any)?.msg
+			if (msg) {
+				uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+			}
 		}
 	}
 
 	const handleLogin = async () => {
 		if (!email.value) {
 			uni.showToast({ title: t('login.emailPlaceholder'), icon: 'none' })
+			return
+		}
+
+		// 提交时也验证邮箱格式
+		if (!isValidEmail(email.value)) {
+			emailErrorPopupRef.value?.open()
 			return
 		}
 		
@@ -194,9 +227,18 @@
 				await login({ account: email.value, password: password.value })
 			}
 			
-			uni.reLaunch({ url: '/pages/home/home' })
+			// 如果有来源页（从场馆预约跳过来的），跳回去；否则跳首页
+			if (redirectUrl.value) {
+				uni.reLaunch({ url: redirectUrl.value })
+			} else {
+				uni.reLaunch({ url: '/pages/home/home' })
+			}
 		} catch (error) {
 			console.error('登录失败:', error)
+			const msg = (error as any)?.msg
+			if (msg) {
+				uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+			}
 		}
 	}
 
@@ -214,6 +256,10 @@
 			pendingLogin.value = false
 			handleLogin()
 		}
+	}
+
+	const closeEmailErrorPopup = () => {
+		emailErrorPopupRef.value?.close()
 	}
 
 	const goRegister = () => uni.navigateTo({ url: '/pages/register/register' })

@@ -9,7 +9,7 @@
 					<view class="field">
 						<text class="field__label">{{ t('register.email') }}</text>
 						<view class="field__input field__input--filled">
-							<input v-model="email" :placeholder="t('register.emailPlaceholder')" placeholder-class="placeholder" />
+							<input v-model="email" :maxlength="100" :placeholder="t('register.emailPlaceholder')" placeholder-class="placeholder" />
 						</view>
 					</view>
 					<view class="field">
@@ -62,6 +62,23 @@
 							</view>
 						</view>
 					</uv-popup>
+
+					<!-- 邮箱格式错误弹出框 -->
+					<uv-popup ref="emailErrorPopupRef" mode="center" :round="16" :closeOnClickOverlay="true">
+						<view class="agreement-popup">
+							<view class="agreement-popup__header">
+								<text class="agreement-popup__title">{{ t('register.emailFormatErrorTitle') }}</text>
+							</view>
+							<view class="agreement-popup__content">
+								<text class="agreement-popup__text">{{ t('register.emailFormatErrorContent') }}</text>
+							</view>
+							<view class="agreement-popup__footer">
+								<view class="agreement-popup__btn agreement-popup__btn--confirm" @click="closeEmailErrorPopup">
+									<text>{{ t('register.confirm') }}</text>
+								</view>
+							</view>
+						</view>
+					</uv-popup>
 				</view>
 			</view>
 			<view class="auth-footer">
@@ -93,7 +110,11 @@ const showPassword = ref(false)
 const countdown = ref(0)
 let countdownTimer: number | null = null
 const agreementPopupRef = ref()
+const emailErrorPopupRef = ref()
 const pendingRegister = ref(false)
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+const isValidEmail = (val: string) => val.length <= 100 && EMAIL_REGEX.test(val)
 
 const getCode = async () => {
 	if (!email.value) {
@@ -102,25 +123,8 @@ const getCode = async () => {
 	}
 	
 	// 检查邮箱格式
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-	if (!emailRegex.test(email.value)) {
-		uni.showModal({
-			title: t('register.emailFormatErrorTitle'),
-			content: t('register.emailFormatErrorContent'),
-			showCancel: false,
-			confirmText: t('register.confirm')
-		})
-		return
-	}
-	
-	// 检查是否为谷歌邮箱
-	if (!email.value.endsWith('@gmail.com')) {
-		uni.showModal({
-			title: t('register.emailErrorTitle'),
-			content: t('register.emailErrorContent'),
-			showCancel: false,
-			confirmText: t('register.confirm')
-		})
+	if (!isValidEmail(email.value)) {
+		emailErrorPopupRef.value?.open()
 		return
 	}
 	
@@ -140,12 +144,22 @@ const getCode = async () => {
 		}, 1000)
 	} catch (error) {
 		console.error('发送验证码失败:', error)
+		const msg = (error as any)?.msg
+		if (msg) {
+			uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+		}
 	}
 }
 
 const handleRegister = async () => {
 	if (!email.value) {
 		uni.showToast({ title: t('register.emailPlaceholder'), icon: 'none' })
+		return
+	}
+
+	// 提交时也验证邮箱格式
+	if (!isValidEmail(email.value)) {
+		emailErrorPopupRef.value?.open()
 		return
 	}
 	
@@ -185,6 +199,10 @@ const handleRegister = async () => {
 		}, 1500)
 	} catch (error) {
 		console.error('注册失败:', error)
+		const msg = (error as any)?.msg
+		if (msg) {
+			uni.showToast({ title: msg, icon: 'none', duration: 2000 })
+		}
 	}
 }
 
@@ -202,6 +220,10 @@ const confirmAgreement = () => {
 		pendingRegister.value = false
 		handleRegister()
 	}
+}
+
+const closeEmailErrorPopup = () => {
+	emailErrorPopupRef.value?.close()
 }
 
 const goLogin = () => uni.navigateBack()

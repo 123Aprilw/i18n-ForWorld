@@ -3,11 +3,11 @@
 		<PageHeader
 			hide-title
 			show-lang
-			glass
+			class
 			back-color="#0058BE"
 			background="rgba(248, 249, 255, 0.8)"
 		/>
-		<scroll-view scroll-y class="edit-body" :show-scrollbar="false">
+		<scroll-view scroll-y class="edit-body" :show-scrollbar="false" v-if="!loading">
 			<view class="avatar-section" @click="chooseAvatar">
 				<view class="avatar-section__wrap">
 					<view class="avatar-section__glow" />
@@ -30,23 +30,36 @@
 							type="text"
 							:placeholder="t('profile.nicknamePlaceholder')"
 							placeholder-class="placeholder"
+							:maxlength="20"
 						/>
+						<text class="field__char-count">{{ nickname.length }}/20</text>
 					</view>
 				</view>
 				<view class="field">
 					<text class="field__label">{{ t('profile.email') }}</text>
-					<view class="field__input">
-						<input
-							v-model="email"
-							type="text"
-							:placeholder="t('profile.emailPlaceholder')"
+					<view class="field__input field__input--readonly">
+						<text class="field__readonly-text">{{ email }}</text>
+					</view>
+				</view>
+				<view class="field">
+					<text class="field__label">{{ t('profile.bio') }}</text>
+					<view class="field__textarea">
+						<textarea
+							v-model="bio"
+							:placeholder="t('profile.bioPlaceholder')"
 							placeholder-class="placeholder"
+							:maxlength="200"
 						/>
+						<text class="field__char-count">{{ bio.length }}/200</text>
 					</view>
 				</view>
 			</view>
 		</scroll-view>
-		<BottomActionBar :text="t('profile.saveChanges')" @click="handleSave" />
+		<view v-if="loading" class="loading-container">
+			<view class="loading-spinner" />
+			<text class="loading-text">{{ t('common.loading') }}</text>
+		</view>
+		<BottomActionBar :text="t('profile.saveChanges')" @click="handleSave" v-if="!loading" />
 		<LanguagePopupHost />
 
 		<uv-popup
@@ -80,6 +93,7 @@ import { useLocale } from '@/composables/useLocale'
 import { useUserProfile } from '@/composables/useUserProfile'
 import { getImageUrl } from '@/src/config/env'
 import { icons } from '@/utils/icons'
+import api from '@/utils/api'
 import PageHeader from '@/components/PageHeader.vue'
 import BottomActionBar from '@/components/BottomActionBar.vue'
 import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
@@ -87,18 +101,23 @@ import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
 const { t } = useLocale()
 const { userProfile, fetchUserProfile, updateUserProfile, loading } = useUserProfile()
 
-const avatar = ref(icons.profile.avatar)
-const nickname = ref('')
-const email = ref('')
+const avatar = ref(userProfile.value?.avatar || icons.profile.avatar)
+const nickname = ref(userProfile.value?.nickname || '')
+const email = ref(userProfile.value?.email || '')
+const bio = ref(userProfile.value?.bio || '')
 const avatarSheetRef = ref<{ open: () => void; close: () => void } | null>(null)
 
 onMounted(async () => {
 	try {
+		// 总是获取最新数据，确保显示正确
 		await fetchUserProfile()
+		console.log('用户资料数据:', userProfile.value)
 		if (userProfile.value) {
 			nickname.value = userProfile.value.nickname || ''
 			email.value = userProfile.value.email || ''
+			bio.value = userProfile.value.bio || ''
 			avatar.value = userProfile.value.avatar || icons.profile.avatar
+			console.log('bio值:', bio.value)
 		}
 	} catch (error) {
 		console.error('获取用户资料失败:', error)
@@ -120,7 +139,42 @@ const pickImage = (source: 'camera' | 'album') => {
 		sizeType: ['compressed'],
 		sourceType: [source],
 		success: (res) => {
-			avatar.value = res.tempFilePaths[0]
+			const tempFilePath = res.tempFilePaths[0]
+			
+			// 显示加载提示
+			uni.showLoading({ title: t('common.uploading'), mask: true })
+			
+			// 使用 uni.uploadFile 上传文件
+			uni.uploadFile({
+				url: (import.meta.env.VITE_BASE_URL || 'https://cs.forward-hub-japan.com') + '/api/common/upload',
+				filePath: tempFilePath,
+				name: 'file',
+				header: {
+					'Authorization': uni.getStorageSync('token') || '',
+					token:uni.getStorageSync('token')
+				},
+				success: (uploadRes) => {
+					try {
+						const data = JSON.parse(uploadRes.data)
+						if (data.data && data.data.url) {
+							avatar.value = data.data.url
+							uni.showToast({ title: t('profile.uploadSuccess'), icon: 'success' })
+						} else {
+							uni.showToast({ title: t('profile.uploadFailed'), icon: 'error' })
+						}
+					} catch (error) {
+						console.error('解析上传响应失败:', error)
+						uni.showToast({ title: t('profile.uploadFailed'), icon: 'error' })
+					}
+				},
+				fail: (error) => {
+					console.error('上传头像失败:', error)
+					uni.showToast({ title: t('profile.uploadFailed'), icon: 'error' })
+				},
+				complete: () => {
+					uni.hideLoading()
+				}
+			})
 		}
 	})
 }
@@ -131,12 +185,20 @@ const handleSave = async () => {
 		return
 	}
 	
+	if (nickname.value.trim().length < 2) {
+		uni.showToast({ title: t('profile.nicknameTooShort'), icon: 'none' })
+		return
+	}
+	
 	try {
 		await updateUserProfile({
 			nickname: nickname.value,
 			avatar: avatar.value,
-			bio: '' // 如果需要简介字段，可以添加
+			bio: bio.value
 		})
+		
+		// 刷新用户资料以确保同步
+		await fetchUserProfile()
 		
 		uni.showToast({ title: t('profile.saveSuccess'), icon: 'success' })
 		setTimeout(() => uni.navigateBack(), 1000)
@@ -155,6 +217,7 @@ const handleSave = async () => {
 
 .edit-body {
 	height: calc(100vh - 128rpx - 202rpx - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+	min-height: 0;
 	box-sizing: border-box;
 }
 
@@ -255,16 +318,84 @@ const handleSave = async () => {
 	padding: 22rpx 32rpx;
 	background: #fff;
 	box-sizing: border-box;
+	position: relative;
 
 	input {
 		width: 100%;
 		font-size: 32rpx;
 		color: #0B1C30;
 	}
+
+	&--readonly {
+		background: #F5F6FA;
+		border-color: #E0E3EE;
+	}
+}
+
+.field__readonly-text {
+	font-size: 32rpx;
+	color: #9C9C9C;
+	line-height: 1.5;
+}
+
+.field__textarea {
+	border: 1rpx solid #C2C6D6;
+	border-radius: 16rpx;
+	padding: 22rpx 32rpx;
+	background: #fff;
+	box-sizing: border-box;
+	position: relative;
+
+	textarea {
+		width: 100%;
+		height: 160rpx;
+		font-size: 32rpx;
+		color: #0B1C30;
+		line-height: 1.5;
+		resize: none;
+	}
+}
+
+.field__char-count {
+	position: absolute;
+	bottom: 16rpx;
+	right: 24rpx;
+	font-size: 24rpx;
+	color: #9C9C9C;
+	pointer-events: none;
 }
 
 .placeholder {
 	color: #6B7280;
+}
+
+.loading-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 24rpx;
+	height: calc(100vh - 128rpx - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.loading-spinner {
+	width: 64rpx;
+	height: 64rpx;
+	border: 6rpx solid #E8EEFF;
+	border-top-color: #0058BE;
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+
+.loading-text {
+	font-size: 28rpx;
+	color: #9C9C9C;
+	font-weight: 400;
 }
 
 .avatar-sheet {

@@ -12,14 +12,14 @@ export function useNotification() {
 	const loading = ref(false)
 	const unreadCount = ref(0)
 	const hasMore = ref(false)
-	const currentPage = ref(1)
+	const lastId = ref('0')
 	const pageSize = ref(10)
 
 	// 获取消息列表
-	const fetchNotifications = async (type: string, lastId: string = '0', reset: boolean = false) => {
+	const fetchNotifications = async (type: string, last_id: string = '0', reset: boolean = false) => {
 		loading.value = true
 		try {
-			const response = await api.GetNotificationList(type, lastId, pageSize.value) as ApiResponse<{ list: Notification[], has_more: boolean }>
+			const response = await api.GetNotificationList(type, last_id, pageSize.value) as ApiResponse<{ list: Notification[], has_more: boolean, last_id: number }>
 			
 			if (reset) {
 				notifications.value = response.data.list
@@ -28,6 +28,8 @@ export function useNotification() {
 			}
 			
 			hasMore.value = response.data.has_more
+			// 使用接口返回的 last_id 作为下一页游标
+			lastId.value = response.data.last_id != null ? String(response.data.last_id) : '0'
 		} catch (error) {
 			console.error('获取消息列表失败:', error)
 		} finally {
@@ -74,14 +76,17 @@ export function useNotification() {
 
 	// 加载更多
 	const loadMore = (type: string) => {
-		if (!loading.value && hasMore.value && notifications.value.length > 0) {
-			const lastId = notifications.value[notifications.value.length - 1].id.toString()
-			fetchNotifications(type, lastId, false)
+		// 只检查 hasMore，防重由调用方（handleLoadMore 的 isLoadingMore）负责
+		if (hasMore.value) {
+			console.log('[DEBUG][loadMore] type=', type, 'lastId=', lastId.value)
+			return fetchNotifications(type, lastId.value, false)
 		}
+		return Promise.resolve()
 	}
 
 	// 刷新
 	const refresh = (type: string) => {
+		lastId.value = '0'
 		fetchNotifications(type, '0', true)
 	}
 
@@ -90,6 +95,7 @@ export function useNotification() {
 		loading,
 		unreadCount,
 		hasMore,
+		lastId,
 		fetchNotifications,
 		fetchUnreadCount,
 		markAsRead,

@@ -15,7 +15,12 @@ export function useVenueList() {
 		try {
 			const response = await api.GetVenueList(page, pageSize.value) as ApiResponse<VenueListResponse>
 			
+			console.log('API Response:', response)
+			console.log('Response data:', response.data)
+			
 			const list = Array.isArray(response.data?.list) ? response.data.list : []
+			
+			console.log('Venue list:', list)
 			
 			if (reset) {
 				venues.value = list
@@ -26,6 +31,8 @@ export function useVenueList() {
 			
 			hasMore.value = response.data?.has_more || false
 			currentPage.value = page
+			
+			console.log('Final venues:', venues.value)
 		} catch (error) {
 			console.error('获取场馆列表失败:', error)
 		} finally {
@@ -34,9 +41,10 @@ export function useVenueList() {
 	}
 
 	const loadMore = () => {
-		if (!loading.value && hasMore.value) {
-			fetchVenues(currentPage.value + 1, false)
+		if (hasMore.value) {
+			return fetchVenues(currentPage.value + 1, false)
 		}
+		return Promise.resolve()
 	}
 
 	const refresh = () => {

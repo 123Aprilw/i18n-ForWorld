@@ -226,9 +226,8 @@
 				},
 				transitionStyle: {
 					position: 'fixed',
-					left: 0,
-					right: 0
-				},
+					left: 'var(--app-left, 0)',
+					right: 'var(--app-right, 0)'				},
 				maskShow: true,
 				mkclick: true,
 				popupClass: this.isDesktop ? 'fixforpc-top' : 'top',
@@ -358,11 +357,13 @@
 			top(type) {
 				this.popupClass = this.isDesktop ? 'fixforpc-top' : 'top'
 				this.ani = ['slide-top']
+				const appLeft = getComputedStyle(document.documentElement).getPropertyValue('--app-left').trim() || '0px'
+				const appRight = getComputedStyle(document.documentElement).getPropertyValue('--app-right').trim() || '0px'
 				this.transitionStyle = {
 					position: 'fixed',
 					zIndex: this.zIndex,
-					left: 0,
-					right: 0,
+					left: appLeft,
+					right: appRight,
 					backgroundColor: this.bg
 				}
 				// TODO 兼容 type 属性 ，后续会废弃
@@ -381,11 +382,13 @@
 			bottom(type) {
 				this.popupClass = 'bottom'
 				this.ani = ['slide-bottom']
+				const appLeft = getComputedStyle(document.documentElement).getPropertyValue('--app-left').trim() || '0px'
+				const appRight = getComputedStyle(document.documentElement).getPropertyValue('--app-right').trim() || '0px'
 				this.transitionStyle = {
 					position: 'fixed',
 					zIndex: this.zIndex,
-					left: 0,
-					right: 0,
+					left: appLeft,
+					right: appRight,
 					bottom: 0,
 					backgroundColor: this.bg
 				}
@@ -400,6 +403,8 @@
 			center(type) {
 				this.popupClass = 'center'
 				this.ani = this.zoom?['zoom-in', 'fade']:['fade'];
+				const appLeft = getComputedStyle(document.documentElement).getPropertyValue('--app-left').trim() || '0px'
+				const appRight = getComputedStyle(document.documentElement).getPropertyValue('--app-right').trim() || '0px'
 				this.transitionStyle = {
 					position: 'fixed',
 					zIndex: this.zIndex,
@@ -408,8 +413,8 @@
 					flexDirection: 'column',
 					/* #endif */
 					bottom: 0,
-					left: 0,
-					right: 0,
+					left: appLeft,
+					right: appRight,
 					top: 0,
 					justifyContent: 'center',
 					alignItems: 'center'
@@ -422,10 +427,11 @@
 			left(type) {
 				this.popupClass = 'left'
 				this.ani = ['slide-left']
+				const appLeft = getComputedStyle(document.documentElement).getPropertyValue('--app-left').trim() || '0px'
 				this.transitionStyle = {
 					position: 'fixed',
 					zIndex: this.zIndex,
-					left: 0,
+					left: appLeft,
 					bottom: 0,
 					top: 0,
 					backgroundColor: this.bg,
@@ -442,11 +448,12 @@
 			right(type) {
 				this.popupClass = 'right'
 				this.ani = ['slide-right']
+				const appRight = getComputedStyle(document.documentElement).getPropertyValue('--app-right').trim() || '0px'
 				this.transitionStyle = {
 					position: 'fixed',
 					zIndex: this.zIndex,
 					bottom: 0,
-					right: 0,
+					right: appRight,
 					top: 0,
 					backgroundColor: this.bg,
 					/* #ifndef APP-NVUE */
@@ -465,6 +472,8 @@
 <style lang="scss" scoped>
 	.uv-popup {
 		position: fixed;
+		left: var(--app-left, 0);
+		right: var(--app-right, 0);
 		/* #ifndef APP-NVUE */
 		z-index: 99;
 

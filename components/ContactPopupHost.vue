@@ -10,7 +10,7 @@
 	>
 		<view class="contact-popup">
 			<view class="contact-popup__phone" @click="callPhone">
-				<text>{{ t('profile.contactPhone') }}</text>
+				<text>{{ displayPhone }}</text>
 			</view>
 			<view class="contact-popup__divider" />
 			<view class="contact-popup__cancel" @click="closePopup">
@@ -21,12 +21,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import { useLocale } from '@/composables/useLocale'
 import { useContactPopup } from '@/composables/useContactPopup'
 
 const { t } = useLocale()
-const { visible, closeContactPopup } = useContactPopup()
+const { visible, closeContactPopup, platformService } = useContactPopup()
 const popupRef = ref<{ open: () => void; close: () => void } | null>(null)
 
 watch(visible, (show) => {
@@ -45,13 +45,21 @@ const closePopup = () => {
 	closeContactPopup()
 }
 
+// 显示客服电话，优先使用API数据，回退到翻译
+const displayPhone = computed(() => {
+	if (platformService.value && platformService.value.phone) {
+		return platformService.value.phone
+	}
+	return t('profile.contactPhone')
+})
+
 const callPhone = () => {
-	const phone = t('profile.contactPhone').replace(/-/g, '')
+	const phone = displayPhone.value.replace(/-/g, '')
 	uni.makePhoneCall({
 		phoneNumber: phone,
 		fail: () => {
 			uni.setClipboardData({
-				data: t('profile.contactPhone'),
+				data: displayPhone.value,
 				success: () => {
 					uni.showToast({ title: t('profile.phoneCopied'), icon: 'none' })
 				}

@@ -311,8 +311,8 @@
 
 	.agreement-footer {
 		position: fixed;
-		left: 0;
-		right: 0;
+		left: var(--app-left, 0);
+		right: var(--app-right, 0);
 		bottom: 0;
 		background: #fff;
 		border-top: 1rpx solid #E5E7EB;

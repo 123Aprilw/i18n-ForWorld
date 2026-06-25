@@ -1,108 +1,128 @@
 {
-	"pages": [
+	"pages": [{
+			"path": "pages/home/home",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "FORWARD_HUB"
+			}
+		},
 		{
 			"path": "pages/login/login",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Login"
-			}
-		},
-		{
-			"path": "pages/home/home",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "Home"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/order/list",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Orders"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/message/list",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Messages"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/profile/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Profile"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/register/register",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Register"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/reset-password/reset-password",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Reset Password"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/user-agreement/user-agreement",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Terms"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/venue/detail",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Venue"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/seat/date",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Select Date"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/seat/time",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Select Time"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/seat/booking",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Seat Booking"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/order/unpaid-block",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Booking Blocked"
+				"navigationBarTitleText": "FORWARD_HUB"
+			}
+		},
+		{
+			"path": "pages/order/payment-webview",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "FORWARD_HUB"
+			}
+		},
+		{
+			"path": "pages/order/payment-result",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/order/detail",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Order Detail"
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		},
 		{
 			"path": "pages/profile/edit",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "Edit Profile"
+				"navigationBarTitleText": "FORWARD_HUB"
+			}
+		},
+		{
+			"path": "pages/message/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "FORWARD_HUB"
 			}
 		}
 	],
@@ -110,7 +130,10 @@
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "FORWARD_HUB",
 		"navigationBarBackgroundColor": "#FFFFFF",
-		"backgroundColor": "#FFFFFF"
+		"backgroundColor": "#DAE6F3",
+		"pageOrientation": "portrait",
+		"animationType": "slide-in-right",
+		"animationDuration": 280
 	},
 	"easycom": {
 		"autoscan": true,

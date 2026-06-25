@@ -1,7 +1,7 @@
 <template>
 	<view class="lang-btn" @click.stop="openLanguagePopup">
 		<uv-icon :name="icons.world" size="15"></uv-icon>
-		<text class="lang-text">{{ t('common.jpEn') }}</text>
+		<text class="lang-text">{{ locale === 'jp' ? 'JP / EN' : 'EN / JP' }}</text>
 	</view>
 </template>
 
@@ -10,7 +10,7 @@ import { useLocale } from '@/composables/useLocale'
 import { useLanguagePopup } from '@/composables/useLanguagePopup'
 import { icons } from '@/utils/icons'
 
-const { t } = useLocale()
+const { locale } = useLocale()
 const { openLanguagePopup } = useLanguagePopup()
 </script>
 

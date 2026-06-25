@@ -49,8 +49,8 @@
 				const style = {
 					position: 'fixed',
 					top: 0,
-					left: 0,
-					right: 0,
+					left: 'var(--app-left, 0)',
+					right: 'var(--app-right, 0)',
 					zIndex: this.zIndex,
 					bottom: 0,
 					'background-color': `rgba(0, 0, 0, ${this.opacity})`
@@ -76,9 +76,9 @@ $uv-overlay-background-color:rgba(0, 0, 0, .7) !default;
 .uv-overlay {
 	position: fixed;
 	top:$uv-overlay-top;
-	left:$uv-overlay-left;
-	width: $uv-overlay-width;
-	height:$uv-overlay-height;
+	left: var(--app-left, $uv-overlay-left);
+	right: var(--app-right, 0);
+	bottom: 0;
 	background-color:$uv-overlay-background-color;
 }
 /* #endif */

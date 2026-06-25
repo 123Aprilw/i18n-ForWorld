@@ -1,7 +1,7 @@
 import { get, post } from '@/utils/request.ts'
 
 // ==================== 邮箱验证码 ====================
-const PostEmsCode = (Email: string, Event: string) => {
+const PostEmsCode = (Email : string, Event : string) => {
 	return post('/api/ems/send', {
 		email: Email,
 		event: Event
@@ -10,7 +10,7 @@ const PostEmsCode = (Email: string, Event: string) => {
 
 // ==================== 用户认证 ====================
 // 注册
-const PostRegister = (Email: string, Password: string, Captcha: string, Agreement: string) => {
+const PostRegister = (Email : string, Password : string, Captcha : string, Agreement : string) => {
 	return post('/api/v1/user/register', {
 		email: Email,
 		password: Password,
@@ -20,7 +20,7 @@ const PostRegister = (Email: string, Password: string, Captcha: string, Agreemen
 }
 
 // 密码登录
-const PostPwdLogin = (Account: string, Password: string) => {
+const PostPwdLogin = (Account : string, Password : string) => {
 	return post('/api/v1/user/login', {
 		account: Account,
 		password: Password
@@ -28,7 +28,7 @@ const PostPwdLogin = (Account: string, Password: string) => {
 }
 
 // 邮箱验证码登录
-const PostEmailLogin = (Email: string, Captcha: string) => {
+const PostEmailLogin = (Email : string, Captcha : string) => {
 	return post('/api/v1/user/emaillogin', {
 		email: Email,
 		captcha: Captcha
@@ -36,7 +36,7 @@ const PostEmailLogin = (Email: string, Captcha: string) => {
 }
 
 // 重置密码
-const PostResetPwd = (Email: string, NewPassword: string, Captcha: string) => {
+const PostResetPwd = (Email : string, NewPassword : string, Captcha : string) => {
 	return post('/api/v1/user/resetpwd', {
 		email: Email,
 		newpassword: NewPassword,
@@ -56,7 +56,7 @@ const GetUserProfile = () => {
 }
 
 // 更新个人资料
-const PostUserProfile = (Nickname: string, Avatar: string, Bio: string) => {
+const PostUserProfile = (Nickname : string, Avatar : string, Bio : string) => {
 	return post('/api/v1/user/profile', {
 		nickname: Nickname,
 		avatar: Avatar,
@@ -66,7 +66,7 @@ const PostUserProfile = (Nickname: string, Avatar: string, Bio: string) => {
 
 // ==================== 协议 ====================
 // 获取协议详情
-const GetAgreementDetail = (Type: string) => {
+const GetAgreementDetail = (Type : string) => {
 	return get('/api/v1/agreement/detail', {
 		type: Type
 	})
@@ -74,7 +74,7 @@ const GetAgreementDetail = (Type: string) => {
 
 // ==================== 场馆 ====================
 // 场馆列表
-const GetVenueList = (Page: number, Limit: number) => {
+const GetVenueList = (Page : number, Limit : number) => {
 	return get('/api/v1/venue/index', {
 		page: Page,
 		limit: Limit
@@ -82,7 +82,7 @@ const GetVenueList = (Page: number, Limit: number) => {
 }
 
 // 场馆详情
-const GetVenueDetail = (Id: string) => {
+const GetVenueDetail = (Id : string) => {
 	return get('/api/v1/venue/detail', {
 		id: Id
 	})
@@ -90,7 +90,7 @@ const GetVenueDetail = (Id: string) => {
 
 // ==================== 预约订单 ====================
 // 创建预约
-const PostReservationOrderCreate = (VenueId: string, ReserveDate: string, StartTime: string, EndTime: string) => {
+const PostReservationOrderCreate = (VenueId : string, ReserveDate : string, StartTime : string, EndTime : string) => {
 	return post('/api/v1/reservation_order/create', {
 		venue_id: VenueId,
 		reserve_date: ReserveDate,
@@ -100,7 +100,7 @@ const PostReservationOrderCreate = (VenueId: string, ReserveDate: string, StartT
 }
 
 // 订单列表
-const GetReservationOrderList = (Status: string, Page: number, Limit: number) => {
+const GetReservationOrderList = (Status : string, Page : number, Limit : number) => {
 	return get('/api/v1/reservation_order/list', {
 		status: Status,
 		page: Page,
@@ -109,14 +109,14 @@ const GetReservationOrderList = (Status: string, Page: number, Limit: number) =>
 }
 
 // 订单详情
-const GetReservationOrderDetail = (Id: string) => {
+const GetReservationOrderDetail = (Id : string) => {
 	return get('/api/v1/reservation_order/detail', {
 		id: Id
 	})
 }
 
 // 取消预约
-const PostReservationOrderCancel = (Id: string) => {
+const PostReservationOrderCancel = (Id : string) => {
 	return post('/api/v1/reservation_order/cancel', {
 		id: Id
 	})
@@ -127,22 +127,22 @@ const GetReservationOrderCheckUnpaid = () => {
 	return get('/api/v1/reservation_order/check_unpaid')
 }
 
-// ==================== 支付 ====================
-// 创建 Stripe 支付
-const PostPaymentStripeCreate = (ReservationOrderId: string, PayType: string) => {
+
+// 创建 Stripe 支付（接口只接收 order_id 和 pay_type）
+const PostPaymentStripeCreate = (ReservationOrderId : string, PayType : string) => {
 	return post('/api/v1/payment/stripe_create', {
-		reservation_order_id: ReservationOrderId,
+		order_id: ReservationOrderId,
 		pay_type: PayType
 	})
 }
 
 // Stripe Webhook
-const PostPaymentStripeWebhook = (Data: any) => {
+const PostPaymentStripeWebhook = (Data : any) => {
 	return post('/api/v1/payment/stripe_webhook', Data)
 }
 
 // 支付状态轮询
-const GetPaymentStatus = (PaymentNo: string) => {
+const GetPaymentStatus = (PaymentNo : string) => {
 	return get('/api/v1/payment/status', {
 		payment_no: PaymentNo
 	})
@@ -150,7 +150,7 @@ const GetPaymentStatus = (PaymentNo: string) => {
 
 // ==================== 消息通知 ====================
 // 消息列表
-const GetNotificationList = (Type: string, LastId: string, Limit: number) => {
+const GetNotificationList = (Type : string, LastId : string, Limit : number) => {
 	return get('/api/v1/notification/index', {
 		type: Type,
 		last_id: LastId,
@@ -164,7 +164,7 @@ const GetNotificationUnreadCount = () => {
 }
 
 // 标记已读
-const PostNotificationRead = (Id: string, ReadAll: string) => {
+const PostNotificationRead = (Id : string, ReadAll : string) => {
 	return post('/api/v1/notification/read', {
 		id: Id,
 		read_all: ReadAll
@@ -177,9 +177,14 @@ const GetPlatformService = () => {
 	return get('/api/v1/common/platform_service')
 }
 
+// 支付注意事项
+const GetPayNotice = () => {
+	return get('/api/v1/common/pay_notice')
+}
+
 // 上传文件
-const PostUpload = (File: any) => {
-	return post('/api/v1/common/upload', {
+const PostUpload = (File : any) => {
+	return post('/api/common/upload', {
 		file: File
 	})
 }
@@ -225,5 +230,6 @@ export default {
 
 	// 公共
 	GetPlatformService,
+	GetPayNotice,
 	PostUpload
 }

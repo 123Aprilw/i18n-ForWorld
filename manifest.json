@@ -1,6 +1,6 @@
 {
     "name" : "FORWARD_HUB",
-    "appid" : "__UNI__824A415",
+    "appid" : "__UNI__E706AE4",
     "description" : "FORWARD_HUB",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -43,7 +43,9 @@
             /* ios打包配置 */
             "ios" : {},
             /* SDK配置 */
-            "sdkConfigs" : {},
+            "sdkConfigs" : {
+                "payment" : {}
+            },
             "icons" : {
                 "android" : {
                     "hdpi" : "unpackage/res/icons/72x72.png",
@@ -101,11 +103,31 @@
         "enable" : false
     },
     "vueVersion" : "3",
-    "locale" : "auto",
+    "locale" : "jp",
     "h5" : {
         "router" : {
             "mode" : "hash",
-            "base" : "./"
-        }
+            "base" : "./",
+            "animationType" : "slide-in-right",
+            "animationDuration" : 300
+        },
+        "devServer" : {
+            "proxy" : {
+                "/api" : {
+                    "target" : "https://cs.forward-hub-japan.com",
+                    "changeOrigin" : true,
+                    "secure" : false
+                }
+            },
+            "headers" : {
+                "Cache-Control" : "no-cache, no-store, must-revalidate"
+            }
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
+        },
+        "title" : "FORWARD_HUB"
     }
 }

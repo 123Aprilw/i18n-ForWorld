@@ -1,17 +1,31 @@
 <template>
 	<view class="home-page">
+		<PageLoading :visible="initialLoading" />
 		<view class="home-header">
 			<BrandLogo />
 			<LanguageSwitcher />
 		</view>
-		<scroll-view scroll-y class="home-body">
+		<PullRefresh 
+			class="home-body" 
+			:refresh="handleRefresh"
+			:loadMore="handleLoadMore"
+			:hasMore="hasMore"
+			:isLoadingMore="isLoadingMore"
+		>
 			<text class="section-title">{{ t('home.sectionTitle') }}</text>
-			<view v-for="venue in venues" :key="venue.id" class="venue-card" @click="goVenue(venue.id)">
+			<view
+				v-for="(venue, index) in venues"
+				:key="venue.id"
+				class="venue-card"
+				:class="{ 'venue-card--visible': visibleCards[String(venue.id)] }"
+				:style="{ animationDelay: `${index * 80}ms` }"
+				@click="goVenue(venue.id)"
+			>
 				<image class="venue-card__image" :src="getImageUrl(venue.cover_image)" mode="aspectFill" />
 				<view class="venue-card__body">
-					<text class="venue-card__name">{{ venue.name }}</text>
-					<text class="venue-card__subtitle">{{ venue.subtitle }}</text>
-					<text class="venue-card__address">{{ venue.address }}</text>
+					<text class="venue-card__name">{{ locale === 'en' ? (venue.name_en || venue.name) : venue.name }}</text>
+					<text class="venue-card__subtitle">{{ locale === 'en' ? (venue.subtitle_en || venue.subtitle) : venue.subtitle }}</text>
+					<text class="venue-card__address">{{ locale === 'en' ? (venue.address_en || venue.address) : venue.address }}</text>
 					<view class="venue-card__footer">
 						<view class="venue-card__icons">
 							<image v-for="(facility, iconIndex) in venue.facilities" :key="iconIndex"
@@ -23,14 +37,15 @@
 					</view>
 				</view>
 			</view>
-		</scroll-view>
+		</PullRefresh>
 		<AppTabBar current="home" />
 		<LanguagePopupHost />
 	</view>
 </template>
 
 <script setup lang="ts">
-	import { onMounted } from 'vue'
+	import { ref, watch } from 'vue'
+	import { onShow } from '@dcloudio/uni-app'
 	import { useLocale } from '@/composables/useLocale'
 	import { useVenueList } from '@/composables/useVenueList'
 	import { getImageUrl } from '@/src/config/env'
@@ -38,15 +53,54 @@
 	import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 	import AppTabBar from '@/components/AppTabBar.vue'
 	import LanguagePopupHost from '@/components/LanguagePopupHost.vue'
+	import PullRefresh from '@/components/PullRefresh.vue'
+	import PageLoading from '@/components/PageLoading.vue'
 
-	const { t } = useLocale()
-	const { venues, fetchVenues } = useVenueList()
+	const { t, locale } = useLocale()
+	const { venues, fetchVenues, loading, hasMore, loadMore } = useVenueList()
 
-	onMounted(() => {
-		fetchVenues().catch(error => {
-			console.error('Failed to fetch venues:', error)
+	const isLoadingMore = ref(false)
+	const initialLoading = ref(true)
+	// 用普通对象记录哪些卡片已可见，Vue 能稳定追踪对象属性变化
+	const visibleCards = ref<Record<string, boolean>>({})
+
+	// 数据加载后依次触发卡片动画
+	watch(venues, (newVenues) => {
+		newVenues.forEach((venue, index) => {
+			const idKey = String(venue.id)
+			if (!visibleCards.value[idKey]) {
+				setTimeout(() => {
+					visibleCards.value = { ...visibleCards.value, [idKey]: true }
+				}, index * 80)
+			}
+		})
+	}, { immediate: true })
+
+	onShow(() => {
+		// onShow 覆盖了 onMounted，首次进入和切换回来都走这里
+		visibleCards.value = {}  // 清空，让 watch 重新触发入场动画
+		initialLoading.value = true
+		fetchVenues(1, true).then(() => {
+			initialLoading.value = false
+		}).catch(error => {
+			console.error('Failed to refresh venues:', error)
+			initialLoading.value = false
 		})
 	})
+
+	const handleRefresh = async () => {
+		await fetchVenues(1, true)
+	}
+
+	const handleLoadMore = async () => {
+		if (isLoadingMore.value) return
+		isLoadingMore.value = true
+		try {
+			await loadMore()
+		} finally {
+			isLoadingMore.value = false
+		}
+	}
 
 	const goVenue = (id : string) => {
 		try {
@@ -59,12 +113,14 @@
 
 <style lang="scss" scoped>
 	.home-page {
-		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
 		background: #DAE6F3;
-		padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 	}
 
 	.home-header {
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -72,11 +128,15 @@
 		padding-top: calc(24rpx + env(safe-area-inset-top));
 		background: rgba(255, 255, 255, 0.95);
 		border-bottom: 1px solid rgba(194, 198, 214, 1);
+		z-index: 100;
 	}
 
 	.home-body {
-		height: calc(100vh - 120rpx - env(safe-area-inset-top) - 100rpx - env(safe-area-inset-bottom));
+		flex: 1;
+		min-height: 0;
+		height: 0;
 		padding: 32rpx;
+		padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 		box-sizing: border-box;
 	}
 
@@ -95,6 +155,14 @@
 		box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
 		margin-bottom: 32rpx;
 		overflow: hidden;
+		opacity: 0;
+		transform: translateY(40rpx);
+		transition: opacity 0.45s ease, transform 0.45s ease;
+
+		&--visible {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.venue-card__image {

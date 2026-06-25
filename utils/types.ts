@@ -96,7 +96,7 @@ export interface Venue {
 	description: string
 	description_en: string
 	cover_image: string
-	images: string
+	images: string | string[]
 	address: string
 	address_en: string
 	zipcode: string
@@ -108,8 +108,8 @@ export interface Venue {
 	price_per_minute: number
 	min_bill_minutes: number
 	checkin_grace_minutes: number
-	rules: string
-	rules_en: string
+	house_rules: string
+	house_rules_en: string
 	weigh: number
 	status: number
 	facilities: VenueFacility[]
@@ -207,6 +207,12 @@ export interface CancelReservationParams {
 
 export interface CheckUnpaidResponse {
 	has_unpaid: boolean
+	order?: {
+		id: number | string
+		order_code?: string
+		amount?: number
+		venue_name?: string
+	}
 }
 
 // ==================== 支付 ====================

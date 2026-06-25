@@ -1,21 +1,21 @@
 <template>
 	<view class="bottom-bar">
-		<view class="bottom-bar__btn" @click="$emit('click')">
+		<view class="bottom-bar__btn" :class="{ 'bottom-bar__btn--disabled': disabled }" @click="!disabled && $emit('click')">
 			<text>{{ text }}</text>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
-defineProps<{ text: string }>()
+defineProps<{ text: string; disabled?: boolean }>()
 defineEmits<{ click: [] }>()
 </script>
 
 <style lang="scss" scoped>
 .bottom-bar {
 	position: fixed;
-	left: 0;
-	right: 0;
+	left: var(--app-left, 0);
+	right: var(--app-right, 0);
 	bottom: 0;
 	padding: 24rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
 	background: #fff;
@@ -32,6 +32,10 @@ defineEmits<{ click: [] }>()
 		color: #fff;
 		font-size: 28rpx;
 		font-weight: 500;
+	}
+	&--disabled {
+		background: #C2C6D6;
+		box-shadow: none;
 	}
 }
 </style>

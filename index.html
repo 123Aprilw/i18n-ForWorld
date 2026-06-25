@@ -9,9 +9,45 @@
         '<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0' +
         (coverSupport ? ', viewport-fit=cover' : '') + '" />')
     </script>
+	<link rel="icon" href="/static/logo.png"  type="image/png"/>
     <title></title>
     <!--preload-links-->
     <!--app-context-->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #b0c8e0;
+        min-height: 100%;
+      }
+      #app {
+        max-width: 480px;
+        width: 100%;
+        margin: 0 auto;
+        min-height: 100vh;
+        background-color: #DAE6F3;
+        position: relative;
+        overflow-x: hidden;
+        box-shadow: 0 0 40px rgba(0,0,0,0.18);
+      }
+    </style>
+    <script>
+      // 计算 #app 的左右边界，供 fixed 定位的组件使用
+      function updateAppBounds() {
+        var app = document.getElementById('app');
+        if (!app) return;
+        var rect = app.getBoundingClientRect();
+        document.documentElement.style.setProperty('--app-left', rect.left + 'px');
+        document.documentElement.style.setProperty('--app-right', (window.innerWidth - rect.right) + 'px');
+      }
+      window.addEventListener('resize', updateAppBounds);
+      // DOM 加载完成后执行一次
+      document.addEventListener('DOMContentLoaded', function() {
+        updateAppBounds();
+        // 延迟再执行一次，确保 Vue 挂载完毕后也更新
+        setTimeout(updateAppBounds, 300);
+      });
+    </script>
   </head>
   <body>
     <div id="app"><!--app-html--></div>

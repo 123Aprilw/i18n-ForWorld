@@ -16,6 +16,7 @@ export function useReservationOrder() {
 	const currentPage = ref(1)
 	const pageSize = ref(10)
 	const hasUnpaid = ref(false)
+	const unpaidOrderId = ref<string>('')
 
 	// 获取订单列表
 	const fetchOrders = async (status: string, page: number = 1, reset: boolean = false) => {
@@ -81,6 +82,11 @@ export function useReservationOrder() {
 		try {
 			const response = await api.GetReservationOrderCheckUnpaid() as ApiResponse<CheckUnpaidResponse>
 			hasUnpaid.value = response.data.has_unpaid
+			if (response.data.order?.id) {
+				unpaidOrderId.value = String(response.data.order.id)
+			} else {
+				unpaidOrderId.value = ''
+			}
 			return response.data
 		} catch (error) {
 			console.error('检查待支付订单失败:', error)
@@ -89,10 +95,9 @@ export function useReservationOrder() {
 	}
 
 	// 加载更多
-	const loadMore = (status: string) => {
-		if (!loading.value && hasMore.value) {
-			fetchOrders(status, currentPage.value + 1, false)
-		}
+	const loadMore = async (status: string) => {
+		if (!hasMore.value) return
+		await fetchOrders(status, currentPage.value + 1, false)
 	}
 
 	// 刷新
@@ -105,6 +110,7 @@ export function useReservationOrder() {
 		loading,
 		hasMore,
 		hasUnpaid,
+		unpaidOrderId,
 		fetchOrders,
 		createReservation,
 		getOrderDetail,
